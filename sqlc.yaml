@@ -1,0 +1,10 @@
+version: "2"
+sql:
+  - engine: "postgresql"
+    queries: "internal/sso/infras/postgresql/query/query.sql"
+    schema: "db/migrations/000001_init_db.up.sql"
+    gen:
+      go:
+        package: "postgresql"
+        out: "internal/sso/infras/postgresql"
+        emit_json_tags: true
