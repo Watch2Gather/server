@@ -6,8 +6,8 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TABLE
   app.messages (
-    id          uuid                      NOT NULL,
-    room_id     uuid                      NOT NULL,
+    id          uuid                      NOT NULL  DEFAULT (uuid_generate_v4()),
+    room_id     uuid                      NOT NULL  DEFAULT (uuid_generate_v4()),
     user_id     uuid                      NOT NULL,
     content     text                      NOT NULL,
     created_at  timestamp with time zone  NOT NULL  DEFAULT (now()),

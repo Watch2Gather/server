@@ -6,7 +6,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TABLE
   app.movies (
-    id            uuid     NOT NULL,
+    id            uuid     NOT NULL  DEFAULT (uuid_generate_v4()),
     title         text     NOT NULL,
     description   text     NOT NULL,
     kp_rating     numeric,

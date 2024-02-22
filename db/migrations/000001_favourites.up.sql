@@ -6,8 +6,8 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TABLE
   app.favourite (
-    movie_id  uuid  NOT NULL,
-    user_id   uuid  NOT NULL,
+    movie_id  uuid  NOT NULL  DEFAULT (uuid_generate_v4()),
+    user_id   uuid  NOT NULL  DEFAULT (uuid_generate_v4()),
 
     CONSTRAINT um_users_id_fk
       FOREIGN KEY(user_id)
