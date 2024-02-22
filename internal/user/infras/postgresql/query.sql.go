@@ -31,7 +31,7 @@ func (q *Queries) CheckPassword(ctx context.Context, arg CheckPasswordParams) (b
 	return exists, err
 }
 
-const createUser = `-- name: CreateUser :exec
+const createUser = `-- name: CreateUser :one
 INSERT INTO "app".users (
   id, username, email, pwd_hash
 ) VALUES (
@@ -47,14 +47,22 @@ type CreateUserParams struct {
 	PwdHash  string    `json:"pwd_hash"`
 }
 
-func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) error {
-	_, err := q.db.ExecContext(ctx, createUser,
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (AppUser, error) {
+	row := q.db.QueryRowContext(ctx, createUser,
 		arg.ID,
 		arg.Username,
 		arg.Email,
 		arg.PwdHash,
 	)
-	return err
+	var i AppUser
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.Email,
+		&i.PwdHash,
+		&i.Avatar,
+	)
+	return i, err
 }
 
 const loginUser = `-- name: LoginUser :one

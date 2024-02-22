@@ -1,0 +1,6 @@
+START TRANSACTION;
+
+DROP INDEX IF EXISTS "app".ix_users_id;
+DROP TABLE IF EXISTS "app".users;
+
+COMMIT;

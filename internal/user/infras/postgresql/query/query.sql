@@ -1,4 +1,4 @@
--- name: CreateUser :exec
+-- name: CreateUser :one
 INSERT INTO "app".users (
   id, username, email, pwd_hash
 ) VALUES (
