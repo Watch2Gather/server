@@ -32,12 +32,12 @@ func NewCofig() (*Config, error) {
 		log.Fatal(err)
 	}
 
-	err := cleanenv.ReadConfig(dir+"/config.yml", cfg)
+	err = cleanenv.ReadConfig(dir+"/config.yml", cfg)
 	if err != nil {
 		return nil, fmt.Errorf("config error", err)
 	}
 
-	err := cleanenv.ReadEnv(cfg)
+	err = cleanenv.ReadEnv(cfg)
 	if err != nil {
 		return nil, err
 	}
