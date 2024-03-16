@@ -12,32 +12,13 @@ import (
 	"github.com/google/uuid"
 )
 
-const checkPassword = `-- name: CheckPassword :one
-SELECT EXISTS (
-  SELECT id FROM "app".users
-    WHERE id=$1 AND pwd_hash=$2
-)
-`
-
-type CheckPasswordParams struct {
-	ID      uuid.UUID `json:"id"`
-	PwdHash string    `json:"pwd_hash"`
-}
-
-func (q *Queries) CheckPassword(ctx context.Context, arg CheckPasswordParams) (bool, error) {
-	row := q.db.QueryRowContext(ctx, checkPassword, arg.ID, arg.PwdHash)
-	var exists bool
-	err := row.Scan(&exists)
-	return exists, err
-}
-
 const createUser = `-- name: CreateUser :one
 INSERT INTO "app".users (
   id, username, email, pwd_hash
 ) VALUES (
   $1, $2, $3, $4
 )
-RETURNING id, username, email, pwd_hash, avatar
+RETURNING username, email, avatar
 `
 
 type CreateUserParams struct {
@@ -47,13 +28,67 @@ type CreateUserParams struct {
 	PwdHash  string    `json:"pwd_hash"`
 }
 
-func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (AppUser, error) {
+type CreateUserRow struct {
+	Username string         `json:"username"`
+	Email    string         `json:"email"`
+	Avatar   sql.NullString `json:"avatar"`
+}
+
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error) {
 	row := q.db.QueryRowContext(ctx, createUser,
 		arg.ID,
 		arg.Username,
 		arg.Email,
 		arg.PwdHash,
 	)
+	var i CreateUserRow
+	err := row.Scan(&i.Username, &i.Email, &i.Avatar)
+	return i, err
+}
+
+const getPasswordById = `-- name: GetPasswordById :one
+SELECT pwd_hash FROM "app".users
+  WHERE id=$1
+`
+
+func (q *Queries) GetPasswordById(ctx context.Context, id uuid.UUID) (string, error) {
+	row := q.db.QueryRowContext(ctx, getPasswordById, id)
+	var pwd_hash string
+	err := row.Scan(&pwd_hash)
+	return pwd_hash, err
+}
+
+const getUserByID = `-- name: GetUserByID :one
+SELECT id, username, email, avatar FROM "app".users
+  WHERE id=$1
+`
+
+type GetUserByIDRow struct {
+	ID       uuid.UUID      `json:"id"`
+	Username string         `json:"username"`
+	Email    string         `json:"email"`
+	Avatar   sql.NullString `json:"avatar"`
+}
+
+func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (GetUserByIDRow, error) {
+	row := q.db.QueryRowContext(ctx, getUserByID, id)
+	var i GetUserByIDRow
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.Email,
+		&i.Avatar,
+	)
+	return i, err
+}
+
+const getUserByUsername = `-- name: GetUserByUsername :one
+SELECT id, username, email, pwd_hash, avatar FROM "app".users
+  WHERE username=$1
+`
+
+func (q *Queries) GetUserByUsername(ctx context.Context, username string) (AppUser, error) {
+	row := q.db.QueryRowContext(ctx, getUserByUsername, username)
 	var i AppUser
 	err := row.Scan(
 		&i.ID,
@@ -65,31 +100,53 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (AppUser
 	return i, err
 }
 
-const loginUser = `-- name: LoginUser :one
-SELECT id, username, email, avatar FROM "app".users
-  WHERE username=$1 AND pwd_hash=$2
+const updateUser = `-- name: UpdateUser :one
+UPDATE "app".users
+  SET
+    username = COALESCE($1, username),
+    email = COALESCE($2, email),
+    avatar = COALESCE($3, avatar)
+  WHERE id = $4
+RETURNING username, email, avatar
 `
 
-type LoginUserParams struct {
-	Username string `json:"username"`
-	PwdHash  string `json:"pwd_hash"`
+type UpdateUserParams struct {
+	Username sql.NullString `json:"username"`
+	Email    sql.NullString `json:"email"`
+	Avatar   sql.NullString `json:"avatar"`
+	ID       uuid.UUID      `json:"id"`
 }
 
-type LoginUserRow struct {
-	ID       uuid.UUID      `json:"id"`
+type UpdateUserRow struct {
 	Username string         `json:"username"`
 	Email    string         `json:"email"`
 	Avatar   sql.NullString `json:"avatar"`
 }
 
-func (q *Queries) LoginUser(ctx context.Context, arg LoginUserParams) (LoginUserRow, error) {
-	row := q.db.QueryRowContext(ctx, loginUser, arg.Username, arg.PwdHash)
-	var i LoginUserRow
-	err := row.Scan(
-		&i.ID,
-		&i.Username,
-		&i.Email,
-		&i.Avatar,
+func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (UpdateUserRow, error) {
+	row := q.db.QueryRowContext(ctx, updateUser,
+		arg.Username,
+		arg.Email,
+		arg.Avatar,
+		arg.ID,
 	)
+	var i UpdateUserRow
+	err := row.Scan(&i.Username, &i.Email, &i.Avatar)
 	return i, err
+}
+
+const updateUserPassword = `-- name: UpdateUserPassword :exec
+UPDATE "app".users
+  SET pwd_hash = $2
+  WHERE id = $1
+`
+
+type UpdateUserPasswordParams struct {
+	ID      uuid.UUID `json:"id"`
+	PwdHash string    `json:"pwd_hash"`
+}
+
+func (q *Queries) UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) error {
+	_, err := q.db.ExecContext(ctx, updateUserPassword, arg.ID, arg.PwdHash)
+	return err
 }
