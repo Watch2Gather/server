@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 
+	"github.com/google/uuid"
 	"github.com/google/wire"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
@@ -28,17 +29,17 @@ func NewUserRepo(pg postgres.DBEngine) users.UserRepo {
 	return &userRepo{pg: pg}
 }
 
-func (u *userRepo) Create(ctx context.Context, register *domain.RegisterModel) (*domain.User, error) {
+func (u *userRepo) Create(ctx context.Context, model *domain.RegisterModel) (*domain.User, error) {
 	querier := postgresql.New(u.pg.GetDB())
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(register.Password), 10)
+	hash, err := bcrypt.GenerateFromPassword([]byte(model.Password), 10)
 	if err != nil {
 		return nil, errors.Wrap(err, "bcrypt.GenerateFromPassword")
 	}
 
 	results, err := querier.CreateUser(ctx, postgresql.CreateUserParams{
-		Username: register.Username,
-		Email:    register.Email,
+		Username: model.Username,
+		Email:    model.Email,
 		PwdHash:  string(hash),
 	})
 	if err != nil {
@@ -53,49 +54,49 @@ func (u *userRepo) Create(ctx context.Context, register *domain.RegisterModel) (
 	return user, nil
 }
 
-func (u *userRepo) CheckPassword(ctx context.Context, login *domain.LoginModel) error {
+func (u *userRepo) CheckPassword(ctx context.Context, model *domain.LoginModel) (uuid.UUID, error) {
 	querier := postgresql.New(u.pg.GetDB())
 
-	user, err := querier.GetUserByUsername(ctx, login.Username)
+	user, err := querier.GetUserByUsername(ctx, model.Username)
 	if err != nil {
-		return errors.Wrap(err, "querier.GetUserByUsername")
+		return uuid.Nil, errors.Wrap(err, "querier.GetUserByUsername")
 	}
 
-	err = bcrypt.CompareHashAndPassword([]byte(user.PwdHash), []byte(login.PasswordHash))
+	err = bcrypt.CompareHashAndPassword([]byte(user.PwdHash), []byte(model.PasswordHash))
 	if err != nil {
-		return errors.Wrap(err, "bcrypt.CompareHashAndPassword")
+		return uuid.Nil, errors.Wrap(err, "bcrypt.CompareHashAndPassword")
 	}
 
-	return nil
+	return user.ID, nil
 }
 
-func (u *userRepo) Update(ctx context.Context, userData *domain.ChangeUserDataModel) (*domain.User, error) {
+func (u *userRepo) Update(ctx context.Context, model *domain.ChangeUserDataModel) (*domain.User, error) {
 	querier := postgresql.New(u.pg.GetDB())
 
 	var newUsername, NewEmail, NewAvatar sql.NullString
-	if userData.Username != "" {
+	if model.Username != "" {
 		newUsername = sql.NullString{
-			String: userData.Username,
+			String: model.Username,
 			Valid:  true,
 		}
 	}
 
-	if userData.Email != "" {
+	if model.Email != "" {
 		NewEmail = sql.NullString{
-			String: userData.Email,
+			String: model.Email,
 			Valid:  true,
 		}
 	}
 
-	if userData.Avatar != "" {
+	if model.Avatar != "" {
 		NewEmail = sql.NullString{
-			String: userData.Avatar,
+			String: model.Avatar,
 			Valid:  true,
 		}
 	}
 
 	updatedUser, err := querier.UpdateUser(ctx, postgresql.UpdateUserParams{
-		ID:       userData.ID,
+		ID:       model.ID,
 		Username: newUsername,
 		Email:    NewEmail,
 		Avatar:   NewAvatar,
@@ -111,22 +112,22 @@ func (u *userRepo) Update(ctx context.Context, userData *domain.ChangeUserDataMo
 	}, nil
 }
 
-func (u *userRepo) UpdatePassword(ctx context.Context, passwordData *domain.ChangePasswordModel) error {
+func (u *userRepo) UpdatePassword(ctx context.Context, model *domain.ChangePasswordModel) error {
 	querier := postgresql.New(u.pg.GetDB())
 
-	pwdHash, err := querier.GetPasswordById(ctx, passwordData.ID)
+	pwdHash, err := querier.GetPasswordById(ctx, model.ID)
 	if err != nil {
 		return errors.Wrap(err, "querier.GetPasswordById")
 	}
 
-	err = bcrypt.CompareHashAndPassword([]byte(pwdHash), []byte(passwordData.OldPasswordHash))
+	err = bcrypt.CompareHashAndPassword([]byte(pwdHash), []byte(model.OldPasswordHash))
 	if err != nil {
 		return errors.Wrap(err, "bcrypt.CompareHashAndPassword")
 	}
 
 	err = querier.UpdateUserPassword(ctx, postgresql.UpdateUserPasswordParams{
-		ID:      passwordData.ID,
-		PwdHash: passwordData.NewPasswordHash,
+		ID:      model.ID,
+		PwdHash: model.NewPasswordHash,
 	})
 	if err != nil {
 		return errors.Wrap(err, "querier.UpdateUserPassword")

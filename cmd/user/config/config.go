@@ -34,7 +34,7 @@ func NewCofig() (*Config, error) {
 
 	err = cleanenv.ReadConfig(dir+"/config.yml", cfg)
 	if err != nil {
-		return nil, fmt.Errorf("config error", err)
+		return nil, fmt.Errorf("config error: %e", err)
 	}
 
 	err = cleanenv.ReadEnv(cfg)

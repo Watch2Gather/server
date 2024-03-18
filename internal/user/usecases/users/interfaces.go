@@ -3,6 +3,8 @@ package users
 import (
 	"context"
 
+	"github.com/google/uuid"
+
 	"github.com/Watch2Gather/server/internal/user/domain"
 )
 
@@ -11,7 +13,7 @@ type (
 		Create(context.Context, *domain.RegisterModel) (*domain.User, error)
 		Update(context.Context, *domain.ChangeUserDataModel) (*domain.User, error)
 		UpdatePassword(context.Context, *domain.ChangePasswordModel) error
-		CheckPassword(context.Context, *domain.LoginModel) error
+		CheckPassword(context.Context, *domain.LoginModel) (uuid.UUID, error)
 	}
 	UseCase interface {
 		Login(context.Context, *domain.LoginModel) (*domain.Token, error)
