@@ -31,3 +31,12 @@ UPDATE "app".users
     avatar = COALESCE(sqlc.narg(avatar), avatar)
   WHERE id = sqlc.arg(id)
 RETURNING username, email, avatar;
+
+-- name: UpdateToken :exec
+UPDATE "app".users
+  SET token = $2
+  WHERE id = $1;
+
+-- name: GetUserByToken :one
+SELECT id, username, email, avatar FROM "app".users
+  WHERE token = $1;

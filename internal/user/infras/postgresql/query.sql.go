@@ -82,14 +82,46 @@ func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (GetUserByIDRow
 	return i, err
 }
 
+const getUserByToken = `-- name: GetUserByToken :one
+SELECT id, username, email, avatar FROM "app".users
+  WHERE token = $1
+`
+
+type GetUserByTokenRow struct {
+	ID       uuid.UUID      `json:"id"`
+	Username string         `json:"username"`
+	Email    string         `json:"email"`
+	Avatar   sql.NullString `json:"avatar"`
+}
+
+func (q *Queries) GetUserByToken(ctx context.Context, token string) (GetUserByTokenRow, error) {
+	row := q.db.QueryRowContext(ctx, getUserByToken, token)
+	var i GetUserByTokenRow
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.Email,
+		&i.Avatar,
+	)
+	return i, err
+}
+
 const getUserByUsername = `-- name: GetUserByUsername :one
 SELECT id, username, email, pwd_hash, avatar FROM "app".users
   WHERE username=$1
 `
 
-func (q *Queries) GetUserByUsername(ctx context.Context, username string) (AppUser, error) {
+type GetUserByUsernameRow struct {
+	ID       uuid.UUID      `json:"id"`
+	Username string         `json:"username"`
+	Email    string         `json:"email"`
+	PwdHash  string         `json:"pwd_hash"`
+	Avatar   sql.NullString `json:"avatar"`
+}
+
+func (q *Queries) GetUserByUsername(ctx context.Context, username string) (GetUserByUsernameRow, error) {
 	row := q.db.QueryRowContext(ctx, getUserByUsername, username)
-	var i AppUser
+	var i GetUserByUsernameRow
 	err := row.Scan(
 		&i.ID,
 		&i.Username,
@@ -98,6 +130,22 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (AppUs
 		&i.Avatar,
 	)
 	return i, err
+}
+
+const updateToken = `-- name: UpdateToken :exec
+UPDATE "app".users
+  SET token = $2
+  WHERE id = $1
+`
+
+type UpdateTokenParams struct {
+	ID    uuid.UUID `json:"id"`
+	Token string    `json:"token"`
+}
+
+func (q *Queries) UpdateToken(ctx context.Context, arg UpdateTokenParams) error {
+	_, err := q.db.ExecContext(ctx, updateToken, arg.ID, arg.Token)
+	return err
 }
 
 const updateUser = `-- name: UpdateUser :one

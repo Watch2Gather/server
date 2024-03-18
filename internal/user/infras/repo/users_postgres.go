@@ -135,3 +135,33 @@ func (u *userRepo) UpdatePassword(ctx context.Context, model *domain.ChangePassw
 
 	return nil
 }
+
+func (u *userRepo) FindByToken(ctx context.Context, model *domain.RefreshTokenModel) (*domain.User, error) {
+	querier := postgresql.New(u.pg.GetDB())
+
+	user, err := querier.GetUserByToken(ctx, model.RefreshToken)
+	if err != nil {
+		return nil, errors.Wrap(err, "querier.GetUserByToken")
+	}
+
+	return &domain.User{
+		Username: user.Username,
+		Email:    user.Email,
+		Avatar:   user.Avatar.String,
+		ID:       user.ID,
+	}, nil
+}
+
+func (u *userRepo) UpdateToken(ctx context.Context, model *domain.UpdateTokenModel) error {
+	querier := postgresql.New(u.pg.GetDB())
+
+	err := querier.UpdateToken(ctx, postgresql.UpdateTokenParams{
+		ID:    model.ID,
+		Token: model.RefreshToken,
+	})
+	if err != nil {
+		return errors.Wrap(err, "querier.UpdateToken")
+	}
+
+	return nil
+}

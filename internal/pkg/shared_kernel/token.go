@@ -42,11 +42,11 @@ var (
 	errInvalidToken    = status.Errorf(codes.Unauthenticated, "invalid token")
 )
 
-func CreateAccessToken(data UserData) (string, error) {
+func CreateAccessToken(ctx context.Context, data UserData) (string, error) {
 	claims := AccessTokenClaims{
 		Username: data.Username,
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Hour * 72).Unix(),
+			ExpiresAt: time.Now().Add(time.Hour).Unix(),
 			IssuedAt:  time.Now().Unix(),
 			NotBefore: time.Now().Add(time.Minute * -5).Unix(),
 			Id:        data.ID.String(),
@@ -61,7 +61,7 @@ func CreateAccessToken(data UserData) (string, error) {
 	return tokenString, nil
 }
 
-func CreateRefreshToken() (string, error) {
+func CreateRefreshToken(ctx context.Context) (string, error) {
 	claims := RefreshTokenClaims{
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(time.Hour * 8784).Unix(), // 8784 = 1 year
@@ -78,14 +78,14 @@ func CreateRefreshToken() (string, error) {
 	return tokenString, nil
 }
 
-func RefreshAccessToken(tokenString string, data UserData) (string, error) {
+func RefreshAccessToken(ctx context.Context, tokenString string, data UserData) (string, error) {
 	if !valid(tokenString) {
 		return "", errInvalidToken
 	}
-	return CreateAccessToken(data)
+	return CreateAccessToken(ctx, data)
 }
 
-func ParseToken(tokenString string) (AccessTokenClaims, error) {
+func ParseToken(ctx context.Context, tokenString string) (AccessTokenClaims, error) {
 	token, _, err := new(jwt.Parser).ParseUnverified(tokenString, AccessTokenClaims{})
 	if err != nil {
 		return AccessTokenClaims{}, fmt.Errorf("jwt.ParseUnverified: %e", err)

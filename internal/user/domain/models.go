@@ -26,6 +26,15 @@ type ChangeUserDataModel struct {
 	Avatar   string
 }
 
+type RefreshTokenModel struct {
+	RefreshToken string
+}
+
+type UpdateTokenModel struct {
+	ID           uuid.UUID
+	RefreshToken string
+}
+
 type Token struct {
 	AccessToken  string
 	RefreshToken string
@@ -35,4 +44,5 @@ type User struct {
 	Username string
 	Email    string
 	Avatar   string
+	ID       uuid.UUID
 }

@@ -10,11 +10,14 @@ CREATE TABLE
     username  text  NOT NULL,
     email     text  NOT NULL,
     pwd_hash  text  NOT NULL,
+    token     text  NOT NULL,
     avatar    text,
 
     CONSTRAINT pk_users PRIMARY KEY (id)
   );
 
 CREATE UNIQUE INDEX ix_users_id ON app.users (id);
+CREATE UNIQUE INDEX ix_users_username ON app.users (username);
+CREATE UNIQUE INDEX ix_users_token ON app.users (token);
 
 COMMIT;
