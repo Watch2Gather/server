@@ -54,20 +54,20 @@ func (u *userRepo) Create(ctx context.Context, model *domain.RegisterModel) (*do
 	return user, nil
 }
 
-func (u *userRepo) CheckPassword(ctx context.Context, model *domain.LoginModel) (uuid.UUID, error) {
+func (u *userRepo) CheckPassword(ctx context.Context, model *domain.LoginModel) (uuid.UUID, string, error) {
 	querier := postgresql.New(u.pg.GetDB())
 
 	user, err := querier.GetUserByUsername(ctx, model.Username)
 	if err != nil {
-		return uuid.Nil, errors.Wrap(err, "querier.GetUserByUsername")
+		return uuid.Nil, "", errors.Wrap(err, "querier.GetUserByUsername")
 	}
 
-	err = bcrypt.CompareHashAndPassword([]byte(user.PwdHash), []byte(model.PasswordHash))
+	err = bcrypt.CompareHashAndPassword([]byte(user.PwdHash), []byte(model.Password))
 	if err != nil {
-		return uuid.Nil, errors.Wrap(err, "bcrypt.CompareHashAndPassword")
+		return uuid.Nil, "", errors.Wrap(err, "bcrypt.CompareHashAndPassword")
 	}
 
-	return user.ID, nil
+	return user.ID, user.Email, nil
 }
 
 func (u *userRepo) Update(ctx context.Context, model *domain.ChangeUserDataModel) (*domain.User, error) {

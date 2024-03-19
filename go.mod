@@ -3,6 +3,8 @@ module github.com/Watch2Gather/server
 go 1.22.0
 
 require (
+	github.com/golang-migrate/migrate/v4 v4.17.0
+	github.com/golang/glog v1.2.0
 	github.com/google/uuid v1.6.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.19.1
 	github.com/ilyakaznacheev/cleanenv v1.5.0
@@ -11,6 +13,13 @@ require (
 	google.golang.org/genproto/googleapis/api v0.0.0-20240221002015-b0ce06bbee7c
 	google.golang.org/grpc v1.62.1
 	google.golang.org/protobuf v1.32.0
+)
+
+require (
+	github.com/hashicorp/errwrap v1.1.0 // indirect
+	github.com/hashicorp/go-multierror v1.1.1 // indirect
+	github.com/lib/pq v1.10.9 // indirect
+	go.uber.org/atomic v1.7.0 // indirect
 )
 
 require (

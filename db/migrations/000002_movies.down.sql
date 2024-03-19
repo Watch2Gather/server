@@ -1,0 +1,6 @@
+START TRANSACTION;
+
+DROP INDEX IF EXISTS "app".ix_movies_id;
+DROP TABLE IF EXISTS "app".movies;
+
+COMMIT;

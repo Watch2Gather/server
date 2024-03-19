@@ -13,7 +13,10 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/Watch2Gather/server/cmd/user/config"
+	sharedkernel "github.com/Watch2Gather/server/internal/pkg/shared_kernel"
+	"github.com/Watch2Gather/server/internal/user/app"
 	"github.com/Watch2Gather/server/pkg/logger"
+	"github.com/Watch2Gather/server/pkg/postgres"
 )
 
 func main() {
@@ -34,22 +37,26 @@ func main() {
 
 	log := slog.New(
 		slog.NewJSONHandler(
-			os.Stdout, &slog.HandlerOptions{Level: logger.ConvertLogLevel(cfg.Log.Level)}))
+			os.Stdout, &slog.HandlerOptions{Level: logger.ConvertLogLevel(cfg.Level)}))
 	slog.SetDefault(log)
 
-	server := grpc.NewServer()
+	server := grpc.NewServer(
+		grpc.UnaryInterceptor(sharedkernel.TokenInterceptor),
+	)
 
 	go func() {
 		defer server.GracefulStop()
 		<-ctx.Done()
 	}()
 
-	// TODO add app init with postgres
-	// cleanup := prepareApp(ctx, cancel, cfg, server)
-	cleanup := func() {}
+	_, cleanup, err := app.InitApp(cfg, postgres.DBConnString(cfg.DsnURL), server)
+	if err != nil {
+		slog.Error("failed init app", err)
+		cancel()
+	}
 
 	// gRPC server
-	address := fmt.Sprintf("%s:%d", cfg.HTTP.Host, cfg.HTTP.Port)
+	address := fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)
 	network := "tcp"
 
 	l, err := net.Listen(network, address)

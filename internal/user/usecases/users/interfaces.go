@@ -13,7 +13,7 @@ type (
 		Create(context.Context, *domain.RegisterModel) (*domain.User, error)
 		Update(context.Context, *domain.ChangeUserDataModel) (*domain.User, error)
 		UpdatePassword(context.Context, *domain.ChangePasswordModel) error
-		CheckPassword(context.Context, *domain.LoginModel) (uuid.UUID, error)
+		CheckPassword(context.Context, *domain.LoginModel) (uuid.UUID, string, error)
 		FindByToken(ctx context.Context, model *domain.RefreshTokenModel) (*domain.User, error)
 		UpdateToken(ctx context.Context, model *domain.UpdateTokenModel) error
 	}

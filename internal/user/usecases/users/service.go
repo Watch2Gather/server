@@ -27,7 +27,7 @@ func NewUseCase(
 }
 
 func (u *usecase) Login(ctx context.Context, model *domain.LoginModel) (*domain.Token, error) {
-	id, err := u.userRepo.CheckPassword(ctx, model)
+	id, email, err := u.userRepo.CheckPassword(ctx, model)
 	if err != nil {
 		return &domain.Token{}, errors.Wrap(err, "userRepo.CheckPassword")
 	}
@@ -37,6 +37,7 @@ func (u *usecase) Login(ctx context.Context, model *domain.LoginModel) (*domain.
 	tokens.AccessToken, err = sharedkernel.CreateAccessToken(ctx, sharedkernel.UserData{
 		ID:       id,
 		Username: model.Username,
+		Email:    email,
 	})
 	if err != nil {
 		return &domain.Token{}, errors.Wrap(err, "sharedkernel.CreateAccessToken")

@@ -29,14 +29,13 @@ type AccessTokenClaims struct {
 	jwt.StandardClaims
 }
 type RefreshTokenClaims struct {
-	Username string
-	Email    string
 	jwt.StandardClaims
 }
 
 type UserData struct {
 	ID       uuid.UUID
 	Username string
+	Email    string
 }
 
 var (
@@ -47,6 +46,7 @@ var (
 func CreateAccessToken(ctx context.Context, data UserData) (string, error) {
 	claims := AccessTokenClaims{
 		Username: data.Username,
+		Email:    data.Email,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(time.Hour).Unix(),
 			IssuedAt:  time.Now().Unix(),
@@ -56,7 +56,7 @@ func CreateAccessToken(ctx context.Context, data UserData) (string, error) {
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	tokenString, err := token.SignedString(accessTokenKey)
+	tokenString, err := token.SignedString([]byte(accessTokenKey))
 	if err != nil {
 		return "", fmt.Errorf("token.SignedString: %e", err)
 	}
@@ -73,7 +73,7 @@ func CreateRefreshToken(ctx context.Context) (string, error) {
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	tokenString, err := token.SignedString(accessTokenKey)
+	tokenString, err := token.SignedString([]byte(refreshTokenKey))
 	if err != nil {
 		return "", fmt.Errorf("token.SignedString: %e", err)
 	}
@@ -101,7 +101,7 @@ func ParseToken(ctx context.Context, tokenString string) (AccessTokenClaims, err
 	return *claims, nil
 }
 
-func TokenInterceptor(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
+func TokenInterceptor(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
 	slog.Debug(fmt.Sprint("Method name: ", info.FullMethod))
 	if info.FullMethod == gen.UserService_LoginUser_FullMethodName {
 		return handler(ctx, req)

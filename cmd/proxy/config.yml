@@ -1,0 +1,14 @@
+app:
+  name: "reverse-proxy"
+  version: "1.0.0"
+
+http:
+  host: "0.0.0.0"
+  port: 5000
+
+grpc:
+  user_host: "0.0.0.0"
+  user_port: 5002
+
+log:
+  log_level: "debug"
