@@ -1,3 +1,6 @@
+//go:build wireinject
+// +build wireinject
+
 package app
 
 import (
@@ -6,6 +9,7 @@ import (
 	"github.com/google/wire"
 
 	"github.com/Watch2Gather/server/cmd/user/config"
+	"github.com/Watch2Gather/server/internal/user/app/router"
 	"github.com/Watch2Gather/server/internal/user/infras/repo"
 	usersUC "github.com/Watch2Gather/server/internal/user/usecases/users"
 	"github.com/Watch2Gather/server/pkg/postgres"
@@ -19,7 +23,8 @@ func InitApp(
 	panic(wire.Build(
 		New,
 		dbEngineFunc,
-		// TODO: add router
+
+		router.UserGRPCServerSet,
 		repo.RepositorySet,
 		usersUC.UseCaseSet,
 	))

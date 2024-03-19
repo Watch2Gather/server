@@ -10,22 +10,56 @@ option go_package = "github.com/Watch2Gather/server/proto/gen";
 service UserService {
   rpc RegisterUser (RegisterUserRequest) returns (RegisterUserResponse) {
     option (google.api.http) = {
-      post: "/api/v1/user/register"
+      post: "/api/v1/register"
       body: "*"
     };
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       summary: "Register new user."
       description: "Register new user and add it to the database."
+      tags: "Users"
     };
   }
   rpc LoginUser (LoginUserRequest) returns (LoginUserResponse) {
     option (google.api.http) = {
-      post: "/api/v1/user/login"
+      post: "/api/v1/login"
       body: "*"
     };
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       summary: "Login user."
       description: "Login user and return session token."
+      tags: "Users"
+    };
+  }
+  rpc ChangeUserData (ChangeUserDataRequest) returns (ChangeUserDataResponse) {
+    option (google.api.http) = {
+      put: "/api/v1/user"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Update user data."
+      description: "Update user data and return new user data."
+      tags: "Users"
+    };
+  }
+  rpc ChangePassword (ChangePasswordRequest) returns (ChangePasswordResponse) {
+    option (google.api.http) = {
+      put: "/api/v1/user/password"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Change user password."
+      description: "Change user password."
+      tags: "Users"
+    };
+  }
+  rpc RefreshToken (RefreshTokenRequest) returns (RefreshTokenResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/user/token"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Refresh user tokens."
+      description: "Get new pair of refresh and access tokens."
+      tags: "Users"
     };
   }
 }
@@ -37,7 +71,6 @@ message RegisterUserRequest {
 }
 
 message RegisterUserResponse {
-  string user_id = 1;
 }
 
 message LoginUserRequest {
@@ -46,7 +79,34 @@ message LoginUserRequest {
 }
 
 message LoginUserResponse {
-  string token = 2;
+  string access_token = 1;
+  string refresh_token = 2;
+}
+
+message ChangeUserDataRequest {
+  string username = 1;
+  string email = 2;
+  string avatar = 3;
+}
+
+message ChangeUserDataResponse {
+  string username = 1;
+  string email = 2;
+  string avatar = 3;
+}
+
+message ChangePasswordRequest {
+  string old_password = 1;
+  string new_password = 2;
+}
+
+message ChangePasswordResponse {}
+
+message RefreshTokenRequest {}
+
+message RefreshTokenResponse {
+  string access_token = 1;
+  string refresh_token = 2;
 }
 
 message User {

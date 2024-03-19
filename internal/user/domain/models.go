@@ -3,8 +3,8 @@ package domain
 import "github.com/google/uuid"
 
 type LoginModel struct {
-	Username     string
-	PasswordHash string
+	Username string
+	Password string
 }
 
 type RegisterModel struct {

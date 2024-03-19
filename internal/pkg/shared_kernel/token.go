@@ -14,6 +14,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+
+	"github.com/Watch2Gather/server/proto/gen"
 )
 
 var (
@@ -101,7 +103,10 @@ func ParseToken(ctx context.Context, tokenString string) (AccessTokenClaims, err
 
 func TokenInterceptor(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
 	slog.Debug(fmt.Sprint("Method name: ", info.FullMethod))
-	if info.FullMethod == "package.service/method" {
+	if info.FullMethod == gen.UserService_LoginUser_FullMethodName {
+		return handler(ctx, req)
+	}
+	if info.FullMethod == gen.UserService_RegisterUser_FullMethodName {
 		return handler(ctx, req)
 	}
 

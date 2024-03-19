@@ -16,7 +16,7 @@
     "application/json"
   ],
   "paths": {
-    "/api/v1/user/login": {
+    "/api/v1/login": {
       "post": {
         "summary": "Login user.",
         "description": "Login user and return session token.",
@@ -46,11 +46,11 @@
           }
         ],
         "tags": [
-          "UserService"
+          "Users"
         ]
       }
     },
-    "/api/v1/user/register": {
+    "/api/v1/register": {
       "post": {
         "summary": "Register new user.",
         "description": "Register new user and add it to the database.",
@@ -80,7 +80,99 @@
           }
         ],
         "tags": [
-          "UserService"
+          "Users"
+        ]
+      }
+    },
+    "/api/v1/user": {
+      "put": {
+        "summary": "Update user data.",
+        "description": "Update user data and return new user data.",
+        "operationId": "UserService_ChangeUserData",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/userapiChangeUserDataResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/userapiChangeUserDataRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/v1/user/password": {
+      "put": {
+        "summary": "Change user password.",
+        "description": "Change user password.",
+        "operationId": "UserService_ChangePassword",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/userapiChangePasswordResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/userapiChangePasswordRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/v1/user/token": {
+      "get": {
+        "summary": "Refresh user tokens.",
+        "description": "Get new pair of refresh and access tokens.",
+        "operationId": "UserService_RefreshToken",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/userapiRefreshTokenResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "Users"
         ]
       }
     }
@@ -114,6 +206,48 @@
         }
       }
     },
+    "userapiChangePasswordRequest": {
+      "type": "object",
+      "properties": {
+        "oldPassword": {
+          "type": "string"
+        },
+        "newPassword": {
+          "type": "string"
+        }
+      }
+    },
+    "userapiChangePasswordResponse": {
+      "type": "object"
+    },
+    "userapiChangeUserDataRequest": {
+      "type": "object",
+      "properties": {
+        "username": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "avatar": {
+          "type": "string"
+        }
+      }
+    },
+    "userapiChangeUserDataResponse": {
+      "type": "object",
+      "properties": {
+        "username": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "avatar": {
+          "type": "string"
+        }
+      }
+    },
     "userapiLoginUserRequest": {
       "type": "object",
       "properties": {
@@ -128,7 +262,21 @@
     "userapiLoginUserResponse": {
       "type": "object",
       "properties": {
-        "token": {
+        "accessToken": {
+          "type": "string"
+        },
+        "refreshToken": {
+          "type": "string"
+        }
+      }
+    },
+    "userapiRefreshTokenResponse": {
+      "type": "object",
+      "properties": {
+        "accessToken": {
+          "type": "string"
+        },
+        "refreshToken": {
           "type": "string"
         }
       }
@@ -148,12 +296,7 @@
       }
     },
     "userapiRegisterUserResponse": {
-      "type": "object",
-      "properties": {
-        "userId": {
-          "type": "string"
-        }
-      }
+      "type": "object"
     }
   }
 }
