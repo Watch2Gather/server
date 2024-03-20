@@ -6,8 +6,8 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TABLE
   app.participants (
-    room_id   uuid  NOT NULL DEFAULT (uuid_generate_v4()),
-    user_id   uuid  NOT NULL DEFAULT (uuid_generate_v4()),
+    room_id   uuid  NOT NULL DEFAULT (public.uuid_generate_v4()),
+    user_id   uuid  NOT NULL DEFAULT (public.uuid_generate_v4()),
 
     CONSTRAINT ur_users_id_fk
       FOREIGN KEY(user_id)

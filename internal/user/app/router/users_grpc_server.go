@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	"github.com/Watch2Gather/server/cmd/user/config"
+	sharedkernel "github.com/Watch2Gather/server/internal/pkg/shared_kernel"
 	"github.com/Watch2Gather/server/internal/user/domain"
 	"github.com/Watch2Gather/server/internal/user/usecases/users"
 	"github.com/Watch2Gather/server/proto/gen"
@@ -44,13 +45,22 @@ func NewGRPCUsersServer(
 func (g *userGRPCServer) RegisterUser(ctx context.Context, req *gen.RegisterUserRequest) (*gen.RegisterUserResponse, error) {
 	slog.Info("POST: RegisterUser")
 
+	if len(req.Username) < 1 || len(req.Username) > 36{
+		return &gen.RegisterUserResponse{}, errors.New("username must be between 1 and 36 characters")
+	}
+
+	if len(req.Email) < 3 || len(req.Email) > 254{
+		return nil, errors.New("email must be between 3 and 254 characters")
+	}
+
 	err := g.uc.Register(ctx, &domain.RegisterModel{
 		Username: req.Username,
 		Password: req.Password,
 		Email:    req.Email,
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "uc.Register")
+		slog.Error("Caught error", "error", errors.Wrap(err, "uc.Register"))
+		return nil, sharedkernel.ErrServer
 	}
 
 	res := gen.RegisterUserResponse{}
@@ -67,6 +77,10 @@ func (g *userGRPCServer) LoginUser(ctx context.Context, req *gen.LoginUserReques
 		Password: req.Password,
 	})
 	if err != nil {
+		slog.Debug("error type", "err: ", err.Error())
+		if errors.Is(err, domain.ErrUnauthorized){
+			return nil, errors.New("Invalid username or password")
+		}
 		return nil, errors.Wrap(err, "uc.Login")
 	}
 

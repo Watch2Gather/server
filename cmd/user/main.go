@@ -83,13 +83,15 @@ func main() {
 	}
 
 	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
+	signal.Notify(quit, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 
 	select {
 	case v := <-quit:
+		// server.Stop()
 		cleanup()
 		slog.Info("signal.Notify", v)
 	case done := <-ctx.Done():
+		// server.Stop()
 		cleanup()
 		slog.Info("ctx.Done", "app done", done)
 	}

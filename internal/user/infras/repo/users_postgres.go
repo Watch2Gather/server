@@ -59,6 +59,9 @@ func (u *userRepo) CheckPassword(ctx context.Context, model *domain.LoginModel) 
 
 	user, err := querier.GetUserByUsername(ctx, model.Username)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return uuid.Nil, "", domain.ErrUnauthorized
+		}
 		return uuid.Nil, "", errors.Wrap(err, "querier.GetUserByUsername")
 	}
 

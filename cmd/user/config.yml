@@ -8,7 +8,7 @@ http:
 
 postgres:
   pool_max: 2
-  dsn_url: host=127.0.0.1 user=sombrer01 password=1925easyMF dbname=watch2gather sslmode=disable
+  dsn_url: host=127.0.0.1 user=postgres password=password dbname=watch2gather sslmode=disable
 
 logger:
   log_level: "debug"
