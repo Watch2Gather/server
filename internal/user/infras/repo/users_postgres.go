@@ -73,7 +73,7 @@ func (u *userRepo) CheckPassword(ctx context.Context, model *domain.LoginModel) 
 	return user.ID, user.Email, nil
 }
 
-func (u *userRepo) Update(ctx context.Context, model *domain.ChangeUserDataModel) (*domain.User, error) {
+func (u *userRepo) Update(ctx context.Context, model *domain.User) (*domain.User, error) {
 	querier := postgresql.New(u.pg.GetDB())
 
 	var newUsername, NewEmail, NewAvatar sql.NullString
@@ -139,10 +139,10 @@ func (u *userRepo) UpdatePassword(ctx context.Context, model *domain.ChangePassw
 	return nil
 }
 
-func (u *userRepo) FindByToken(ctx context.Context, model *domain.RefreshTokenModel) (*domain.User, error) {
+func (u *userRepo) FindByID(ctx context.Context, id uuid.UUID) (*domain.User, error) {
 	querier := postgresql.New(u.pg.GetDB())
 
-	user, err := querier.GetUserByToken(ctx, model.RefreshToken)
+	user, err := querier.GetUserByID(ctx, id)
 	if err != nil {
 		return nil, errors.Wrap(err, "querier.GetUserByToken")
 	}
@@ -152,15 +152,20 @@ func (u *userRepo) FindByToken(ctx context.Context, model *domain.RefreshTokenMo
 		Email:    user.Email,
 		Avatar:   user.Avatar.String,
 		ID:       user.ID,
+		Token:    user.Token.String,
 	}, nil
 }
 
 func (u *userRepo) UpdateToken(ctx context.Context, model *domain.UpdateTokenModel) error {
 	querier := postgresql.New(u.pg.GetDB())
 
+	str := sql.NullString{
+		String: model.RefreshToken,
+		Valid:  true,
+	}
 	err := querier.UpdateToken(ctx, postgresql.UpdateTokenParams{
 		ID:    model.ID,
-		Token: model.RefreshToken,
+		Token: str,
 	})
 	if err != nil {
 		return errors.Wrap(err, "querier.UpdateToken")

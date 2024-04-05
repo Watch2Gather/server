@@ -15,6 +15,6 @@ type AppUser struct {
 	Username string         `json:"username"`
 	Email    string         `json:"email"`
 	PwdHash  string         `json:"pwd_hash"`
-	Token    string         `json:"token"`
+	Token    sql.NullString `json:"token"`
 	Avatar   sql.NullString `json:"avatar"`
 }

@@ -54,7 +54,8 @@ service UserService {
   }
   rpc RefreshToken (RefreshTokenRequest) returns (RefreshTokenResponse) {
     option (google.api.http) = {
-      get: "/api/v1/user/token"
+      post: "/api/v1/user/token"
+      body: "*"
     };
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       summary: "Refresh user tokens."
@@ -102,7 +103,9 @@ message ChangePasswordRequest {
 
 message ChangePasswordResponse {}
 
-message RefreshTokenRequest {}
+message RefreshTokenRequest {
+  string refresh_token = 1;
+}
 
 message RefreshTokenResponse {
   string access_token = 1;

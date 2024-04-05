@@ -1,8 +1,8 @@
 -- name: CreateUser :one
 INSERT INTO "app".users (
-  id, username, email, pwd_hash
+  username, email, pwd_hash
 ) VALUES (
-  $1, $2, $3, $4
+  $1, $2, $3
 )
 RETURNING username, email, avatar;
 
@@ -11,7 +11,7 @@ SELECT id, username, email, pwd_hash, avatar FROM "app".users
   WHERE username=$1;
 
 -- name: GetUserByID :one
-SELECT id, username, email, avatar FROM "app".users
+SELECT id, username, email, avatar, token FROM "app".users
   WHERE id=$1;
 
 -- name: GetPasswordById :one
@@ -37,6 +37,6 @@ UPDATE "app".users
   SET token = $2
   WHERE id = $1;
 
--- name: GetUserByToken :one
-SELECT id, username, email, avatar FROM "app".users
-  WHERE token = $1;
+-- name: GetUserTokenById :one
+SELECT token FROM "app".users
+  WHERE id = $1;

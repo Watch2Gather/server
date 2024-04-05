@@ -11,9 +11,7 @@ import (
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/status"
 
 	"github.com/Watch2Gather/server/proto/gen"
 )
@@ -33,15 +31,10 @@ type RefreshTokenClaims struct {
 }
 
 type UserData struct {
-	ID       uuid.UUID
 	Username string
 	Email    string
+	ID       uuid.UUID
 }
-
-var (
-	errMissingMetadata = status.Errorf(codes.InvalidArgument, "missing metadata")
-	errInvalidToken    = status.Errorf(codes.Unauthenticated, "invalid token")
-)
 
 func CreateAccessToken(ctx context.Context, data UserData) (string, error) {
 	claims := AccessTokenClaims{
@@ -63,10 +56,11 @@ func CreateAccessToken(ctx context.Context, data UserData) (string, error) {
 	return tokenString, nil
 }
 
-func CreateRefreshToken(ctx context.Context) (string, error) {
+func CreateRefreshToken(ctx context.Context, id uuid.UUID) (string, error) {
 	claims := RefreshTokenClaims{
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Hour * 8784).Unix(), // 8784 = 1 year
+			ExpiresAt: time.Now().Add(time.Hour * 8784).Unix(),
+			Id:        id.String(),
 			IssuedAt:  time.Now().Unix(),
 			NotBefore: time.Now().Add(time.Minute * -5).Unix(),
 		},
@@ -82,23 +76,33 @@ func CreateRefreshToken(ctx context.Context) (string, error) {
 
 func RefreshAccessToken(ctx context.Context, tokenString string, data UserData) (string, error) {
 	if !valid(tokenString) {
-		return "", errInvalidToken
+		return "", ErrInvalidToken
 	}
 	return CreateAccessToken(ctx, data)
 }
 
 func ParseToken(ctx context.Context, tokenString string) (AccessTokenClaims, error) {
-	token, _, err := new(jwt.Parser).ParseUnverified(tokenString, AccessTokenClaims{})
+	claims := AccessTokenClaims{}
+	_, _, err := new(jwt.Parser).ParseUnverified(tokenString, &claims)
 	if err != nil {
 		return AccessTokenClaims{}, fmt.Errorf("jwt.ParseUnverified: %e", err)
 	}
 
-	claims, ok := token.Claims.(*AccessTokenClaims)
+	return claims, nil
+}
+
+func GetToken(ctx context.Context) (string, error) {
+	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
-		return AccessTokenClaims{}, errInvalidToken
+		return "", ErrMissingMetadata
 	}
 
-	return *claims, nil
+	if len(md["authorization"]) < 1 {
+		return "", ErrInvalidToken
+	}
+	tokenString := strings.TrimPrefix(md["authorization"][0], "Bearer ")
+
+	return tokenString, nil
 }
 
 func TokenInterceptor(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
@@ -110,50 +114,34 @@ func TokenInterceptor(ctx context.Context, req any, info *grpc.UnaryServerInfo, 
 		return handler(ctx, req)
 	}
 
-	md, ok := metadata.FromIncomingContext(ctx)
-	if !ok {
-		return nil, errMissingMetadata
+	tokenString, err := GetToken(ctx)
+	if err != nil {
+		slog.Error("token.GetToken: %e", err)
+		return nil, err
 	}
-
-	if len(md["authorization"]) < 1 {
-		return nil, errInvalidToken
-	}
-	tokenString := strings.TrimPrefix(md["authorization"][0], "Bearer ")
 
 	if !valid(tokenString) {
-		return nil, errInvalidToken
+		return nil, ErrInvalidToken
 	}
 
 	m, err := handler(ctx, req)
 	if err != nil {
 		slog.Error("RPC failed with error: %v", err)
 	}
-	return m, err
+	return m, nil
 }
 
 func valid(tokenString string) bool {
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (any, error) {
-		if token.Method.Alg() != jwt.SigningMethodHS256.Alg() {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-		}
+	claims := AccessTokenClaims{}
+	token, err := jwt.ParseWithClaims(tokenString, &claims, func(token *jwt.Token) (interface{}, error) {
 		return []byte(accessTokenKey), nil
 	})
 	if err != nil {
 		slog.Error(fmt.Sprintf("jwt.Parse: %e", err))
 		return false
 	}
-	claims, ok := token.Claims.(*AccessTokenClaims)
-	if !ok {
-		return false
-	}
 
-	now := time.Now().Unix()
-	if claims.NotBefore > now {
-		return false
-	}
-	if claims.ExpiresAt < time.Now().Unix() {
-		return false
-	}
+	slog.Debug("valid", "token", token)
 
 	return token.Valid
 }

@@ -6,7 +6,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TABLE IF NOT EXISTS
 "app".users (
-    id        uuid  NOT NULL  DEFAULT (public.uuid_generate_v4()),
+    id        uuid  NOT NULL  DEFAULT (uuid_generate_v4()),
     username  text  NOT NULL,
     email     text  NOT NULL,
     pwd_hash  text  NOT NULL,

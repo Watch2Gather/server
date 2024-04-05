@@ -3,6 +3,7 @@ package users
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/google/wire"
 	"github.com/pkg/errors"
 
@@ -43,9 +44,16 @@ func (u *usecase) Login(ctx context.Context, model *domain.LoginModel) (*domain.
 		return &domain.Token{}, errors.Wrap(err, "sharedkernel.CreateAccessToken")
 	}
 
-	tokens.RefreshToken, err = sharedkernel.CreateRefreshToken(ctx)
+	tokens.RefreshToken, err = sharedkernel.CreateRefreshToken(ctx, id)
 	if err != nil {
 		return &domain.Token{}, errors.Wrap(err, "sharedkernel.CreateRefreshToken")
+	}
+	err = u.userRepo.UpdateToken(ctx, &domain.UpdateTokenModel{
+		ID:           id,
+		RefreshToken: tokens.RefreshToken,
+	})
+	if err != nil {
+		return &domain.Token{}, errors.Wrap(err, "sharedkernel.UpdateToken")
 	}
 
 	return &tokens, nil
@@ -67,7 +75,7 @@ func (u *usecase) ChangePassword(ctx context.Context, model *domain.ChangePasswo
 	return nil
 }
 
-func (u *usecase) ChangeUserData(ctx context.Context, model *domain.ChangeUserDataModel) (*domain.User, error) {
+func (u *usecase) ChangeUserData(ctx context.Context, model *domain.User) (*domain.User, error) {
 	user, err := u.userRepo.Update(ctx, model)
 	if err != nil {
 		return nil, errors.Wrap(err, "userRepo.Update")
@@ -75,35 +83,53 @@ func (u *usecase) ChangeUserData(ctx context.Context, model *domain.ChangeUserDa
 	return user, nil
 }
 
-func (u *usecase) RefreshToken(ctx context.Context, token *domain.Token) (*domain.Token, error) {
-	user, err := u.userRepo.FindByToken(ctx, &domain.RefreshTokenModel{
-		RefreshToken: token.RefreshToken,
-	})
+func (u *usecase) RefreshToken(ctx context.Context, model *domain.Token) (*domain.Token, error) {
+	tokenString, err := sharedkernel.GetToken(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "sharedkernel.GetToken")
+	}
+
+	claims, err := sharedkernel.ParseToken(ctx, tokenString)
+	if err != nil {
+		return nil, errors.Wrap(err, "sharedkernel.ParseToken")
+	}
+
+	id, err := uuid.Parse(claims.Id)
+	if err != nil {
+		return nil, errors.Wrap(err, "uuid.Parse")
+	}
+
+	user, err := u.userRepo.FindByID(ctx, id)
 	if err != nil {
 		return nil, errors.Wrap(err, "userRepo.FindByToken")
 	}
 
+	if user.Token != model.RefreshToken {
+		return nil, sharedkernel.ErrInvalidToken
+	}
+
 	var tokens domain.Token
 
-	tokens.RefreshToken, err = sharedkernel.CreateRefreshToken(ctx)
+	tokens.AccessToken, err = sharedkernel.CreateAccessToken(ctx, sharedkernel.UserData{
+		Username: user.Username,
+		Email:    user.Email,
+		ID:       id,
+	})
+	if err != nil {
+		return &domain.Token{}, errors.Wrap(err, "sharedkernel.CreateAccessToken")
+	}
+
+	tokens.RefreshToken, err = sharedkernel.CreateRefreshToken(ctx, id)
 	if err != nil {
 		return &domain.Token{}, errors.Wrap(err, "sharedkernel.CreateRefreshToken")
 	}
 
 	err = u.userRepo.UpdateToken(ctx, &domain.UpdateTokenModel{
-		ID:           user.ID,
-		RefreshToken: token.RefreshToken,
+		ID:           id,
+		RefreshToken: model.RefreshToken,
 	})
 	if err != nil {
 		return &domain.Token{}, errors.Wrap(err, "sharedkernel.UpdateToken")
-	}
-
-	tokens.AccessToken, err = sharedkernel.CreateAccessToken(ctx, sharedkernel.UserData{
-		ID:       user.ID,
-		Username: user.Username,
-	})
-	if err != nil {
-		return &domain.Token{}, errors.Wrap(err, "sharedkernel.CreateAccessToken")
 	}
 
 	return &tokens, nil

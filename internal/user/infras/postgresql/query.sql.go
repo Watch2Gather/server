@@ -14,18 +14,17 @@ import (
 
 const createUser = `-- name: CreateUser :one
 INSERT INTO "app".users (
-  id, username, email, pwd_hash
+  username, email, pwd_hash
 ) VALUES (
-  $1, $2, $3, $4
+  $1, $2, $3
 )
 RETURNING username, email, avatar
 `
 
 type CreateUserParams struct {
-	ID       uuid.UUID `json:"id"`
-	Username string    `json:"username"`
-	Email    string    `json:"email"`
-	PwdHash  string    `json:"pwd_hash"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	PwdHash  string `json:"pwd_hash"`
 }
 
 type CreateUserRow struct {
@@ -35,12 +34,7 @@ type CreateUserRow struct {
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error) {
-	row := q.db.QueryRowContext(ctx, createUser,
-		arg.ID,
-		arg.Username,
-		arg.Email,
-		arg.PwdHash,
-	)
+	row := q.db.QueryRowContext(ctx, createUser, arg.Username, arg.Email, arg.PwdHash)
 	var i CreateUserRow
 	err := row.Scan(&i.Username, &i.Email, &i.Avatar)
 	return i, err
@@ -59,7 +53,7 @@ func (q *Queries) GetPasswordById(ctx context.Context, id uuid.UUID) (string, er
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, username, email, avatar FROM "app".users
+SELECT id, username, email, avatar, token FROM "app".users
   WHERE id=$1
 `
 
@@ -68,6 +62,7 @@ type GetUserByIDRow struct {
 	Username string         `json:"username"`
 	Email    string         `json:"email"`
 	Avatar   sql.NullString `json:"avatar"`
+	Token    sql.NullString `json:"token"`
 }
 
 func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (GetUserByIDRow, error) {
@@ -78,30 +73,7 @@ func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (GetUserByIDRow
 		&i.Username,
 		&i.Email,
 		&i.Avatar,
-	)
-	return i, err
-}
-
-const getUserByToken = `-- name: GetUserByToken :one
-SELECT id, username, email, avatar FROM "app".users
-  WHERE token = $1
-`
-
-type GetUserByTokenRow struct {
-	ID       uuid.UUID      `json:"id"`
-	Username string         `json:"username"`
-	Email    string         `json:"email"`
-	Avatar   sql.NullString `json:"avatar"`
-}
-
-func (q *Queries) GetUserByToken(ctx context.Context, token string) (GetUserByTokenRow, error) {
-	row := q.db.QueryRowContext(ctx, getUserByToken, token)
-	var i GetUserByTokenRow
-	err := row.Scan(
-		&i.ID,
-		&i.Username,
-		&i.Email,
-		&i.Avatar,
+		&i.Token,
 	)
 	return i, err
 }
@@ -132,6 +104,18 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (GetUs
 	return i, err
 }
 
+const getUserTokenById = `-- name: GetUserTokenById :one
+SELECT token FROM "app".users
+  WHERE id = $1
+`
+
+func (q *Queries) GetUserTokenById(ctx context.Context, id uuid.UUID) (sql.NullString, error) {
+	row := q.db.QueryRowContext(ctx, getUserTokenById, id)
+	var token sql.NullString
+	err := row.Scan(&token)
+	return token, err
+}
+
 const updateToken = `-- name: UpdateToken :exec
 UPDATE "app".users
   SET token = $2
@@ -139,8 +123,8 @@ UPDATE "app".users
 `
 
 type UpdateTokenParams struct {
-	ID    uuid.UUID `json:"id"`
-	Token string    `json:"token"`
+	ID    uuid.UUID      `json:"id"`
+	Token sql.NullString `json:"token"`
 }
 
 func (q *Queries) UpdateToken(ctx context.Context, arg UpdateTokenParams) error {

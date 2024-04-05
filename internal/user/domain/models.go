@@ -14,30 +14,9 @@ type RegisterModel struct {
 }
 
 type ChangePasswordModel struct {
-	ID              uuid.UUID
 	OldPasswordHash string
 	NewPasswordHash string
-}
-
-type ChangeUserDataModel struct {
-	ID       uuid.UUID
-	Username string
-	Email    string
-	Avatar   string
-}
-
-type RefreshTokenModel struct {
-	RefreshToken string
-}
-
-type UpdateTokenModel struct {
-	ID           uuid.UUID
-	RefreshToken string
-}
-
-type Token struct {
-	AccessToken  string
-	RefreshToken string
+	ID              uuid.UUID
 }
 
 type User struct {
@@ -45,4 +24,16 @@ type User struct {
 	Email    string
 	Avatar   string
 	ID       uuid.UUID
+	Token    string
 }
+
+type UpdateTokenModel struct {
+	RefreshToken string
+	ID           uuid.UUID
+}
+
+type Token struct {
+	AccessToken  string
+	RefreshToken string
+}
+

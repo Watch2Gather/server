@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/google/uuid"
 	"github.com/google/wire"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
@@ -45,18 +46,22 @@ func NewGRPCUsersServer(
 func (g *userGRPCServer) RegisterUser(ctx context.Context, req *gen.RegisterUserRequest) (*gen.RegisterUserResponse, error) {
 	slog.Info("POST: RegisterUser")
 
-	if len(req.Username) < 1 || len(req.Username) > 36{
-		return &gen.RegisterUserResponse{}, errors.New("username must be between 1 and 36 characters")
+	if len(req.GetUsername()) < 1 || len(req.GetUsername()) > 36 {
+		return nil, errors.New("username must be between 1 and 36 characters")
 	}
 
-	if len(req.Email) < 3 || len(req.Email) > 254{
+	if len(req.GetEmail()) < 3 || len(req.GetEmail()) > 254 {
 		return nil, errors.New("email must be between 3 and 254 characters")
 	}
 
+	if len(req.GetPassword()) < 8 {
+		return nil, errors.New("Password must be at least 8 characters")
+	}
+
 	err := g.uc.Register(ctx, &domain.RegisterModel{
-		Username: req.Username,
-		Password: req.Password,
-		Email:    req.Email,
+		Username: req.GetUsername(),
+		Password: req.GetPassword(),
+		Email:    req.GetEmail(),
 	})
 	if err != nil {
 		slog.Error("Caught error", "error", errors.Wrap(err, "uc.Register"))
@@ -69,16 +74,22 @@ func (g *userGRPCServer) RegisterUser(ctx context.Context, req *gen.RegisterUser
 }
 
 func (g *userGRPCServer) LoginUser(ctx context.Context, req *gen.LoginUserRequest) (*gen.LoginUserResponse, error) {
-	slog.Info("POST: RegisterUser")
+	slog.Info("POST: LoginUser")
 
+	if len(req.GetUsername()) < 1 || len(req.GetUsername()) > 36 {
+		return nil, errors.New("username must be between 1 and 36 characters")
+	}
+
+	if len(req.GetPassword()) < 8 {
+		return nil, errors.New("Password must be at least 8 characters")
+	}
 	res := gen.LoginUserResponse{}
 	token, err := g.uc.Login(ctx, &domain.LoginModel{
-		Username: req.Username,
-		Password: req.Password,
+		Username: req.GetUsername(),
+		Password: req.GetPassword(),
 	})
 	if err != nil {
-		slog.Debug("error type", "err: ", err.Error())
-		if errors.Is(err, domain.ErrUnauthorized){
+		if errors.Is(err, domain.ErrUnauthorized) {
 			return nil, errors.New("Invalid username or password")
 		}
 		return nil, errors.Wrap(err, "uc.Login")
@@ -90,14 +101,102 @@ func (g *userGRPCServer) LoginUser(ctx context.Context, req *gen.LoginUserReques
 	return &res, nil
 }
 
-func (userGRPCServer) ChangeUserData(_ context.Context, _ *gen.ChangeUserDataRequest) (_ *gen.ChangeUserDataResponse, _ error) {
-	panic("not implemented") // TODO: Implement
+func (g *userGRPCServer) ChangeUserData(ctx context.Context, req *gen.ChangeUserDataRequest) (*gen.ChangeUserDataResponse, error) {
+	slog.Info("PUT: ChangeUserData")
+
+	if len(req.GetUsername()) < 1 || len(req.GetUsername()) > 36 {
+		return nil, errors.New("username must be between 1 and 36 characters")
+	}
+
+	if len(req.GetEmail()) < 3 || len(req.GetEmail()) > 254 {
+		return nil, errors.New("email must be between 3 and 254 characters")
+	}
+
+
+	tokenString, err := sharedkernel.GetToken(ctx)
+	if err != nil{
+		return nil, errors.Wrap(err, "sharedkernel.GetToken")
+	}
+
+	tokenClaims, err := sharedkernel.ParseToken(ctx, tokenString)
+	if err != nil{
+		return nil, errors.Wrap(err, "sharedkernel.ParseToken")
+	}
+
+	id, err := uuid.Parse(tokenClaims.Id)
+  if err != nil{
+    return nil, errors.Wrap(err, "uuid.Parse")
+  }
+
+	user, err := g.uc.ChangeUserData(ctx, &domain.User{
+		ID:       id,
+		Username: req.GetUsername(),
+		Email:    req.GetEmail(),
+		Avatar:   req.GetAvatar(),
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "uc.ChangeUserData")
+	}
+
+	res := gen.ChangeUserDataResponse{
+		Username: user.Username,
+		Email:    user.Email,
+		Avatar:   user.Avatar,
+	}
+
+	return &res, nil
 }
 
-func (userGRPCServer) ChangePassword(_ context.Context, _ *gen.ChangePasswordRequest) (_ *gen.ChangePasswordResponse, _ error) {
-	panic("not implemented") // TODO: Implement
+func (g *userGRPCServer) ChangePassword(ctx context.Context, req *gen.ChangePasswordRequest) (*gen.ChangePasswordResponse, error) {
+	slog.Info("PUT: ChangePassword")
+	if len(req.NewPassword) < 8 {
+		return nil, errors.New("Password must be at least 8 characters")
+	}
+
+	tokenString, err := sharedkernel.GetToken(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "sharedkernel.GetToken")
+	}
+
+	tokenClaims, err := sharedkernel.ParseToken(ctx, tokenString)
+	if err != nil {
+		return nil, errors.Wrap(err, "sharedkernel.ParseToken")
+	}
+
+	ID, err := uuid.Parse(tokenClaims.Id)
+	if err != nil {
+		return nil, errors.Wrap(err, "uuid.Parse")
+	}
+
+	err = g.uc.ChangePassword(ctx, &domain.ChangePasswordModel{
+		ID:              ID,
+		OldPasswordHash: req.GetOldPassword(),
+		NewPasswordHash: req.GetNewPassword(),
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "usecase.ChangePassword")
+	}
+
+	return &gen.ChangePasswordResponse{}, nil
 }
 
-func (userGRPCServer) RefreshToken(_ context.Context, _ *gen.RefreshTokenRequest) (_ *gen.RefreshTokenResponse, _ error) {
-	panic("not implemented") // TODO: Implement
+func (g *userGRPCServer) RefreshToken(ctx context.Context, req *gen.RefreshTokenRequest) (*gen.RefreshTokenResponse, error) {
+  slog.Info("POST: RefreshToken")
+	tokenString, err := sharedkernel.GetToken(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "sharedkernel.GetToken")
+	}
+
+	tokens, err := g.uc.RefreshToken(ctx, &domain.Token{
+		AccessToken:  tokenString,
+		RefreshToken: req.RefreshToken,
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "uc.RefreshToken")
+	}
+
+	return &gen.RefreshTokenResponse{
+		AccessToken:  tokens.AccessToken,
+		RefreshToken: tokens.RefreshToken,
+	}, nil
 }
