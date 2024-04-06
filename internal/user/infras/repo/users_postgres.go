@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/google/wire"
+	"github.com/lib/pq"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 
@@ -43,6 +44,12 @@ func (u *userRepo) Create(ctx context.Context, model *domain.RegisterModel) (*do
 		PwdHash:  string(hash),
 	})
 	if err != nil {
+		if pqErr, ok := err.(*pq.Error); ok {
+			switch pqErr.Code.Name() {
+			case "unique_violation":
+				return nil, domain.ErrUserAlreadyExists
+			}
+		}
 		return nil, errors.Wrap(err, "querier.CreateUser")
 	}
 
@@ -105,6 +112,12 @@ func (u *userRepo) Update(ctx context.Context, model *domain.User) (*domain.User
 		Avatar:   NewAvatar,
 	})
 	if err != nil {
+		if pqErr, ok := err.(*pq.Error); ok {
+			switch pqErr.Code.Name() {
+			case "unique_violation":
+				return nil, domain.ErrUserAlreadyExists
+			}
+		}
 		return nil, errors.Wrap(err, "querier.UpdateUser")
 	}
 

@@ -127,6 +127,7 @@ func TokenInterceptor(ctx context.Context, req any, info *grpc.UnaryServerInfo, 
 	m, err := handler(ctx, req)
 	if err != nil {
 		slog.Error("RPC failed with error: %v", err)
+		return nil, err
 	}
 	return m, nil
 }

@@ -8,7 +8,9 @@ import (
 	"github.com/google/wire"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/reflection"
+	"google.golang.org/grpc/status"
 
 	"github.com/Watch2Gather/server/cmd/user/config"
 	sharedkernel "github.com/Watch2Gather/server/internal/pkg/shared_kernel"
@@ -46,16 +48,16 @@ func NewGRPCUsersServer(
 func (g *userGRPCServer) RegisterUser(ctx context.Context, req *gen.RegisterUserRequest) (*gen.RegisterUserResponse, error) {
 	slog.Info("POST: RegisterUser")
 
-	if len(req.GetUsername()) < 1 || len(req.GetUsername()) > 36 {
-		return nil, errors.New("username must be between 1 and 36 characters")
+	if len(req.GetUsername()) < 3 || len(req.GetUsername()) > 36 {
+		return nil, status.Error(codes.InvalidArgument, "Username must be between 3 and 36 characters")
 	}
 
 	if len(req.GetEmail()) < 3 || len(req.GetEmail()) > 254 {
-		return nil, errors.New("email must be between 3 and 254 characters")
+		return nil, status.Error(codes.InvalidArgument, "Email must be between 3 and 254 characters")
 	}
 
 	if len(req.GetPassword()) < 8 {
-		return nil, errors.New("Password must be at least 8 characters")
+		return nil, status.Error(codes.InvalidArgument, "Password must be at least 8 characters")
 	}
 
 	err := g.uc.Register(ctx, &domain.RegisterModel{
@@ -64,6 +66,9 @@ func (g *userGRPCServer) RegisterUser(ctx context.Context, req *gen.RegisterUser
 		Email:    req.GetEmail(),
 	})
 	if err != nil {
+		if errors.Is(err, domain.ErrUserAlreadyExists) {
+			return nil, status.Error(codes.AlreadyExists, "User already exists")
+		}
 		slog.Error("Caught error", "error", errors.Wrap(err, "uc.Register"))
 		return nil, sharedkernel.ErrServer
 	}
@@ -76,12 +81,12 @@ func (g *userGRPCServer) RegisterUser(ctx context.Context, req *gen.RegisterUser
 func (g *userGRPCServer) LoginUser(ctx context.Context, req *gen.LoginUserRequest) (*gen.LoginUserResponse, error) {
 	slog.Info("POST: LoginUser")
 
-	if len(req.GetUsername()) < 1 || len(req.GetUsername()) > 36 {
-		return nil, errors.New("username must be between 1 and 36 characters")
+	if len(req.GetUsername()) < 3 || len(req.GetUsername()) > 36 {
+		return nil, status.Error(codes.InvalidArgument, "Username must be between 3 and 36 characters")
 	}
 
 	if len(req.GetPassword()) < 8 {
-		return nil, errors.New("Password must be at least 8 characters")
+		return nil, status.Error(codes.InvalidArgument, "Password must be at least 8 characters")
 	}
 	res := gen.LoginUserResponse{}
 	token, err := g.uc.Login(ctx, &domain.LoginModel{
@@ -90,9 +95,10 @@ func (g *userGRPCServer) LoginUser(ctx context.Context, req *gen.LoginUserReques
 	})
 	if err != nil {
 		if errors.Is(err, domain.ErrUnauthorized) {
-			return nil, errors.New("Invalid username or password")
+			return nil, status.Error(codes.Unauthenticated, "Wrong username or password")
 		}
-		return nil, errors.Wrap(err, "uc.Login")
+		slog.Error("Caught error", "error", errors.Wrap(err, "uc.Login"))
+		return nil, sharedkernel.ErrServer
 	}
 
 	res.AccessToken = token.AccessToken
@@ -104,29 +110,31 @@ func (g *userGRPCServer) LoginUser(ctx context.Context, req *gen.LoginUserReques
 func (g *userGRPCServer) ChangeUserData(ctx context.Context, req *gen.ChangeUserDataRequest) (*gen.ChangeUserDataResponse, error) {
 	slog.Info("PUT: ChangeUserData")
 
-	if len(req.GetUsername()) < 1 || len(req.GetUsername()) > 36 {
-		return nil, errors.New("username must be between 1 and 36 characters")
+	if len(req.GetUsername()) < 3 || len(req.GetUsername()) > 36 {
+		return nil, status.Error(codes.InvalidArgument, "Username must be between 3 and 36 characters")
 	}
 
 	if len(req.GetEmail()) < 3 || len(req.GetEmail()) > 254 {
-		return nil, errors.New("email must be between 3 and 254 characters")
+		return nil, status.Error(codes.InvalidArgument, "Email must be between 3 and 254 characters")
 	}
 
-
 	tokenString, err := sharedkernel.GetToken(ctx)
-	if err != nil{
-		return nil, errors.Wrap(err, "sharedkernel.GetToken")
+	if err != nil {
+		slog.Error("Caught error", "error", errors.Wrap(err, "sharedkernel.GetToken"))
+		return nil, sharedkernel.ErrServer
 	}
 
 	tokenClaims, err := sharedkernel.ParseToken(ctx, tokenString)
-	if err != nil{
-		return nil, errors.Wrap(err, "sharedkernel.ParseToken")
+	if err != nil {
+		slog.Error("Caught error", "error", errors.Wrap(err, "sharedkernel.ParseToken"))
+		return nil, sharedkernel.ErrServer
 	}
 
 	id, err := uuid.Parse(tokenClaims.Id)
-  if err != nil{
-    return nil, errors.Wrap(err, "uuid.Parse")
-  }
+	if err != nil {
+		slog.Error("Caught error", "error", errors.Wrap(err, "uuid.Parse"))
+		return nil, sharedkernel.ErrServer
+	}
 
 	user, err := g.uc.ChangeUserData(ctx, &domain.User{
 		ID:       id,
@@ -135,7 +143,11 @@ func (g *userGRPCServer) ChangeUserData(ctx context.Context, req *gen.ChangeUser
 		Avatar:   req.GetAvatar(),
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "uc.ChangeUserData")
+		if errors.Is(err, domain.ErrUserAlreadyExists) {
+			return nil, status.Error(codes.AlreadyExists, "User already exists")
+		}
+		slog.Error("Caught error", "error", errors.Wrap(err, "uc.Login"))
+		return nil, sharedkernel.ErrServer
 	}
 
 	res := gen.ChangeUserDataResponse{
@@ -181,7 +193,7 @@ func (g *userGRPCServer) ChangePassword(ctx context.Context, req *gen.ChangePass
 }
 
 func (g *userGRPCServer) RefreshToken(ctx context.Context, req *gen.RefreshTokenRequest) (*gen.RefreshTokenResponse, error) {
-  slog.Info("POST: RefreshToken")
+	slog.Info("POST: RefreshToken")
 	tokenString, err := sharedkernel.GetToken(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "sharedkernel.GetToken")

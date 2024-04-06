@@ -2,5 +2,8 @@ package domain
 
 import "errors"
 
-var ErrUserNotFound = errors.New("user not found")
-var ErrUnauthorized = errors.New("invalid credentials")
+var (
+	ErrUserNotFound      = errors.New("user not found")
+	ErrUnauthorized      = errors.New("invalid credentials")
+	ErrUserAlreadyExists = errors.New("user already exists")
+)
