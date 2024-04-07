@@ -69,7 +69,7 @@ func (g *userGRPCServer) RegisterUser(ctx context.Context, req *gen.RegisterUser
 		if errors.Is(err, domain.ErrUserAlreadyExists) {
 			return nil, status.Error(codes.AlreadyExists, "User already exists")
 		}
-		slog.Error("Caught error", "error", errors.Wrap(err, "uc.Register"))
+		slog.Error("Caught error", "trace", errors.Wrap(err, "uc.Register"))
 		return nil, sharedkernel.ErrServer
 	}
 
@@ -97,7 +97,7 @@ func (g *userGRPCServer) LoginUser(ctx context.Context, req *gen.LoginUserReques
 		if errors.Is(err, domain.ErrUnauthorized) {
 			return nil, status.Error(codes.Unauthenticated, "Wrong username or password")
 		}
-		slog.Error("Caught error", "error", errors.Wrap(err, "uc.Login"))
+		slog.Error("Caught error", "trace", errors.Wrap(err, "uc.Login"))
 		return nil, sharedkernel.ErrServer
 	}
 
@@ -120,19 +120,19 @@ func (g *userGRPCServer) ChangeUserData(ctx context.Context, req *gen.ChangeUser
 
 	tokenString, err := sharedkernel.GetToken(ctx)
 	if err != nil {
-		slog.Error("Caught error", "error", errors.Wrap(err, "sharedkernel.GetToken"))
+		slog.Error("Caught error", "trace", errors.Wrap(err, "sharedkernel.GetToken"))
 		return nil, sharedkernel.ErrServer
 	}
 
 	tokenClaims, err := sharedkernel.ParseToken(ctx, tokenString)
 	if err != nil {
-		slog.Error("Caught error", "error", errors.Wrap(err, "sharedkernel.ParseToken"))
+		slog.Error("Caught error", "trace", errors.Wrap(err, "sharedkernel.ParseToken"))
 		return nil, sharedkernel.ErrServer
 	}
 
 	id, err := uuid.Parse(tokenClaims.Id)
 	if err != nil {
-		slog.Error("Caught error", "error", errors.Wrap(err, "uuid.Parse"))
+		slog.Error("Caught error", "trace", errors.Wrap(err, "uuid.Parse"))
 		return nil, sharedkernel.ErrServer
 	}
 
@@ -146,7 +146,7 @@ func (g *userGRPCServer) ChangeUserData(ctx context.Context, req *gen.ChangeUser
 		if errors.Is(err, domain.ErrUserAlreadyExists) {
 			return nil, status.Error(codes.AlreadyExists, "User already exists")
 		}
-		slog.Error("Caught error", "error", errors.Wrap(err, "uc.Login"))
+		slog.Error("Caught error", "trace", errors.Wrap(err, "uc.Login"))
 		return nil, sharedkernel.ErrServer
 	}
 
@@ -162,31 +162,38 @@ func (g *userGRPCServer) ChangeUserData(ctx context.Context, req *gen.ChangeUser
 func (g *userGRPCServer) ChangePassword(ctx context.Context, req *gen.ChangePasswordRequest) (*gen.ChangePasswordResponse, error) {
 	slog.Info("PUT: ChangePassword")
 	if len(req.NewPassword) < 8 {
-		return nil, errors.New("Password must be at least 8 characters")
+		return nil, status.Error(codes.InvalidArgument, "Password must be at least 8 characters")
 	}
 
 	tokenString, err := sharedkernel.GetToken(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "sharedkernel.GetToken")
+		slog.Error("Caught error", "trace", errors.Wrap(err, "sharedkernel.GetToken"))
+		return nil, sharedkernel.ErrServer
 	}
 
 	tokenClaims, err := sharedkernel.ParseToken(ctx, tokenString)
 	if err != nil {
-		return nil, errors.Wrap(err, "sharedkernel.ParseToken")
+		slog.Error("Caught error", "trace", errors.Wrap(err, "sharedkernel.ParseToken"))
+		return nil, sharedkernel.ErrServer
 	}
 
 	ID, err := uuid.Parse(tokenClaims.Id)
 	if err != nil {
-		return nil, errors.Wrap(err, "uuid.Parse")
+		slog.Error("Caught error", "trace", errors.Wrap(err, "uuid.Parse"))
+		return nil, sharedkernel.ErrServer
 	}
 
 	err = g.uc.ChangePassword(ctx, &domain.ChangePasswordModel{
 		ID:              ID,
-		OldPasswordHash: req.GetOldPassword(),
-		NewPasswordHash: req.GetNewPassword(),
+		OldPassword: req.GetOldPassword(),
+		NewPassword: req.GetNewPassword(),
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "usecase.ChangePassword")
+		if errors.Is(err, domain.ErrInvalidPassword){
+			return nil, status.Error(codes.InvalidArgument, "Invalid password")
+		}
+		slog.Error("Caught error", "trace", errors.Wrap(err, "uc.ChangePassword"))
+		return nil, sharedkernel.ErrServer
 	}
 
 	return &gen.ChangePasswordResponse{}, nil
@@ -196,7 +203,8 @@ func (g *userGRPCServer) RefreshToken(ctx context.Context, req *gen.RefreshToken
 	slog.Info("POST: RefreshToken")
 	tokenString, err := sharedkernel.GetToken(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "sharedkernel.GetToken")
+		slog.Error("Caught error", "trace", errors.Wrap(err, "sharedkernel.GetToken"))
+		return nil, sharedkernel.ErrServer
 	}
 
 	tokens, err := g.uc.RefreshToken(ctx, &domain.Token{
@@ -204,7 +212,8 @@ func (g *userGRPCServer) RefreshToken(ctx context.Context, req *gen.RefreshToken
 		RefreshToken: req.RefreshToken,
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "uc.RefreshToken")
+		slog.Error("Caught error", "trace", errors.Wrap(err, "uc.RefreshToken"))
+		return nil, sharedkernel.ErrServer
 	}
 
 	return &gen.RefreshTokenResponse{

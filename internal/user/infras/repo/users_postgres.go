@@ -131,19 +131,26 @@ func (u *userRepo) Update(ctx context.Context, model *domain.User) (*domain.User
 func (u *userRepo) UpdatePassword(ctx context.Context, model *domain.ChangePasswordModel) error {
 	querier := postgresql.New(u.pg.GetDB())
 
-	pwdHash, err := querier.GetPasswordById(ctx, model.ID)
+	oldPwdHash, err := querier.GetPasswordById(ctx, model.ID)
 	if err != nil {
 		return errors.Wrap(err, "querier.GetPasswordById")
 	}
 
-	err = bcrypt.CompareHashAndPassword([]byte(pwdHash), []byte(model.OldPasswordHash))
+	err = bcrypt.CompareHashAndPassword([]byte(oldPwdHash), []byte(model.OldPassword))
 	if err != nil {
+		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword){
+			return domain.ErrInvalidPassword
+		}
 		return errors.Wrap(err, "bcrypt.CompareHashAndPassword")
 	}
 
+	newPwdHash, err := bcrypt.GenerateFromPassword([]byte(model.NewPassword), 10)
+	if err != nil {
+		return errors.Wrap(err, "bcrypt.GenerateFromPassword")
+	}
 	err = querier.UpdateUserPassword(ctx, postgresql.UpdateUserPasswordParams{
 		ID:      model.ID,
-		PwdHash: model.NewPasswordHash,
+		PwdHash: string(newPwdHash),
 	})
 	if err != nil {
 		return errors.Wrap(err, "querier.UpdateUserPassword")

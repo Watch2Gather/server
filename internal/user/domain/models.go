@@ -14,8 +14,8 @@ type RegisterModel struct {
 }
 
 type ChangePasswordModel struct {
-	OldPasswordHash string
-	NewPasswordHash string
+	OldPassword string
+	NewPassword string
 	ID              uuid.UUID
 }
 

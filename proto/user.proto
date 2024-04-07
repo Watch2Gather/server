@@ -32,7 +32,7 @@ service UserService {
   }
   rpc ChangeUserData (ChangeUserDataRequest) returns (ChangeUserDataResponse) {
     option (google.api.http) = {
-      post: "/api/v1/user"
+      put: "/api/v1/user"
       body: "*"
     };
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
@@ -43,7 +43,7 @@ service UserService {
   }
   rpc ChangePassword (ChangePasswordRequest) returns (ChangePasswordResponse) {
     option (google.api.http) = {
-      post: "/api/v1/user/password"
+      put: "/api/v1/user/password"
       body: "*"
     };
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {

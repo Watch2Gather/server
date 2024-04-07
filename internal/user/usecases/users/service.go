@@ -116,12 +116,12 @@ func (u *usecase) RefreshToken(ctx context.Context, model *domain.Token) (*domai
 		ID:       id,
 	})
 	if err != nil {
-		return &domain.Token{}, errors.Wrap(err, "sharedkernel.CreateAccessToken")
+		return nil, errors.Wrap(err, "sharedkernel.CreateAccessToken")
 	}
 
 	tokens.RefreshToken, err = sharedkernel.CreateRefreshToken(ctx, id)
 	if err != nil {
-		return &domain.Token{}, errors.Wrap(err, "sharedkernel.CreateRefreshToken")
+		return nil, errors.Wrap(err, "sharedkernel.CreateRefreshToken")
 	}
 
 	err = u.userRepo.UpdateToken(ctx, &domain.UpdateTokenModel{
@@ -129,7 +129,7 @@ func (u *usecase) RefreshToken(ctx context.Context, model *domain.Token) (*domai
 		RefreshToken: model.RefreshToken,
 	})
 	if err != nil {
-		return &domain.Token{}, errors.Wrap(err, "sharedkernel.UpdateToken")
+		return nil, errors.Wrap(err, "sharedkernel.UpdateToken")
 	}
 
 	return &tokens, nil
