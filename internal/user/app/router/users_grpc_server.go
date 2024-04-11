@@ -47,6 +47,7 @@ func NewGRPCUsersServer(
 
 func (g *userGRPCServer) RegisterUser(ctx context.Context, req *gen.RegisterUserRequest) (*gen.RegisterUserResponse, error) {
 	slog.Info("POST: RegisterUser")
+	slog.Debug("Request", "body", req)
 
 	if len(req.GetUsername()) < 3 || len(req.GetUsername()) > 36 {
 		return nil, status.Error(codes.InvalidArgument, "Username must be between 3 and 36 characters")

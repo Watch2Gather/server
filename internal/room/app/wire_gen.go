@@ -7,10 +7,10 @@
 package app
 
 import (
-	"github.com/Watch2Gather/server/cmd/user/config"
-	"github.com/Watch2Gather/server/internal/user/app/router"
-	"github.com/Watch2Gather/server/internal/user/infras/repo"
-	"github.com/Watch2Gather/server/internal/user/usecases/users"
+	"github.com/Watch2Gather/server/cmd/room/config"
+	"github.com/Watch2Gather/server/internal/room/app/router"
+	"github.com/Watch2Gather/server/internal/room/infras/repo"
+	"github.com/Watch2Gather/server/internal/room/usecases/rooms"
 	"github.com/Watch2Gather/server/pkg/postgres"
 	"google.golang.org/grpc"
 )
@@ -27,10 +27,10 @@ func InitApp(cfg *config.Config, dbConnStr postgres.DBConnString, grpcServer *gr
 	if err != nil {
 		return nil, nil, err
 	}
-	userRepo := repo.NewUserRepo(dbEngine)
-	useCase := users.NewUseCase(userRepo)
-	userServiceServer := router.NewGRPCUsersServer(grpcServer, cfg, useCase)
-	app := New(cfg, dbEngine, useCase, userServiceServer)
+	roomRepo := repo.NewRoomRepo(dbEngine)
+	useCase := rooms.NewUseCase(roomRepo)
+	roomServiceServer := router.NewGRPCRoomServer(grpcServer, cfg, useCase)
+	app := New(cfg, dbEngine, useCase, roomServiceServer)
 	return app, func() {
 		cleanup()
 	}, nil

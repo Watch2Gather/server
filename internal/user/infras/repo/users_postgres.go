@@ -26,7 +26,9 @@ var _ users.UserRepo = (*userRepo)(nil)
 
 var RepositorySet = wire.NewSet(NewUserRepo)
 
-func NewUserRepo(pg postgres.DBEngine) users.UserRepo {
+func NewUserRepo(
+	pg postgres.DBEngine,
+) users.UserRepo {
 	return &userRepo{pg: pg}
 }
 

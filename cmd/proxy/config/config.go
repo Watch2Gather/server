@@ -13,14 +13,16 @@ import (
 type (
 	Config struct {
 		configs.App  `yaml:"app"`
-		configs.HTTP `yaml:"http"`
-		GRPC         `yaml:"grpc"`
 		configs.Log  `yaml:"log"`
+		GRPC         `yaml:"grpc"`
+		configs.HTTP `yaml:"http"`
 	}
 
 	GRPC struct {
 		UserHost string `env-required:"true" yaml:"user_host" env:"GRPC_USER_HOST"`
 		UserPort int    `env-required:"true" yaml:"user_port" env:"GRPC_USER_PORT"`
+		RoomHost string `env-required:"true" yaml:"room_host" env:"GRPC_ROOM_HOST"`
+		RoomPort int    `env-required:"true" yaml:"room_port" env:"GRPC_ROOM_PORT"`
 	}
 )
 
@@ -31,6 +33,9 @@ func NewCofig() (*Config, error) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	// debug
+	fmt.Println(dir)
 
 	err = cleanenv.ReadConfig(dir+"/config.yml", cfg)
 	if err != nil {

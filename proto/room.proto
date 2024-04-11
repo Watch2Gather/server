@@ -1,8 +1,149 @@
 syntax="proto3";
 
-package watch2gather.proto.userapi;
+package watch2gather.proto.roomapi;
 
 import "google/api/annotations.proto";
 import "protoc-gen-openapiv2/options/annotations.proto";
 
 option go_package = "github.com/Watch2Gather/server/proto/gen";
+
+service RoomService {
+  rpc CreateRoom (CreateRoomRequest) returns (CreateRoomResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/rooms"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Create room"
+      description: "Create a new room"
+      tags: "Room"
+    };
+  }
+  rpc GetRoomsByUser (GetRoomsByUserRequest) returns (GetRoomsByUserResponse){
+    option (google.api.http) = {
+      get: "/api/v1/rooms"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Get rooms by user"
+      description: "Get all rooms that the user is in"
+      tags: "Room"
+    };
+  }
+  rpc InviteToRoom (InviteToRoomRequest) returns (InviteToRoomResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/rooms/{roomId}/invite"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Invite to room"
+      description: "Invite users to a room"
+      tags: "Room"
+    };
+  }
+  rpc EnterRoom(EnterRoomRequest) returns (stream Message) {
+    option (google.api.http) = {
+      get: "/api/v1/rooms/{roomId}"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Enter room"
+      description: "Enter a room and receive messages"
+      tags: "Room"
+    };
+  }
+  rpc SendMessage (Message) returns (SendMessageResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/rooms/{roomId}"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Send message"
+      description: "Send a message to a room"
+      tags: "Room"
+    };
+  }
+  rpc UpdateRoom (UpdateRoomRequest) returns (UpdateRoomResponse) {
+    option (google.api.http) = {
+      put: "/api/v1/rooms/{roomId}"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Update room"
+      description: "Update room name and film"
+      tags: "Room"
+    };
+  }
+  rpc DeleteRoom (DeleteRoomRequest) returns (DeleteRoomResponse) {
+    option (google.api.http) = {
+      delete: "/api/v1/rooms/{roomId}"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Delete room"
+      description: "Delete room"
+      tags: "Room"
+    };
+  }
+}
+
+message CreateRoomRequest {
+  repeated string participantIds = 1;
+  string roomName = 2;
+}
+
+message CreateRoomResponse {
+  string ownerId = 1;
+  string roomId = 2;
+}
+
+message GetRoomsByUserRequest {
+  int32 limit = 1;
+  int32 offset = 2;
+}
+
+message GetRoomsByUserResponse {
+  repeated Room rooms = 1;
+}
+
+message InviteToRoomRequest {
+  repeated string participantIds = 1;
+  string roomId = 2;
+}
+
+message InviteToRoomResponse {
+}
+
+message EnterRoomRequest {
+  string roomId = 1;
+}
+
+message SendMessageResponse {
+}
+
+message DeleteRoomRequest {
+  string roomId = 1;
+}
+
+message DeleteRoomResponse {
+}
+
+message UpdateRoomRequest {
+  string roomId = 1;
+  string roomName = 2;
+  string filmId = 3;
+}
+
+message UpdateRoomResponse {
+}
+
+message Message {
+  string senderId = 1;
+  string roomId = 2;
+  string text = 3;
+}
+
+message Room {
+  string ownerId = 1;
+  int32 participantsCount = 2;
+  string filmTitle = 3;
+  string filmPoster = 4;
+}
+

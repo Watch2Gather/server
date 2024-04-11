@@ -24,7 +24,7 @@ func InitApp(
 		New,
 		dbEngineFunc,
 
-		router.UserGRPCServerSet,
+		router.RoomGRPCServerSet,
 		repo.RepositorySet,
 		usersUC.UseCaseSet,
 	))

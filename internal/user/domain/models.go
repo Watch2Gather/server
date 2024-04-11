@@ -16,15 +16,15 @@ type RegisterModel struct {
 type ChangePasswordModel struct {
 	OldPassword string
 	NewPassword string
-	ID              uuid.UUID
+	ID          uuid.UUID
 }
 
 type User struct {
 	Username string
 	Email    string
 	Avatar   string
-	ID       uuid.UUID
 	Token    string
+	ID       uuid.UUID
 }
 
 type UpdateTokenModel struct {
@@ -36,4 +36,3 @@ type Token struct {
 	AccessToken  string
 	RefreshToken string
 }
-

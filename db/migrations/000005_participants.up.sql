@@ -14,7 +14,7 @@ CREATE TABLE
         REFERENCES app.users(id),
     CONSTRAINT ur_rooms_id_fk
       FOREIGN KEY(room_id)
-        REFERENCES app.movies(id)
+        REFERENCES app.rooms(id)
   );
 
 CREATE INDEX ix_participants_room_id ON app.participants (room_id);

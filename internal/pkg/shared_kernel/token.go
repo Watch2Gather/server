@@ -10,6 +10,7 @@ import (
 
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
+	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 
@@ -103,6 +104,24 @@ func GetToken(ctx context.Context) (string, error) {
 	tokenString := strings.TrimPrefix(md["authorization"][0], "Bearer ")
 
 	return tokenString, nil
+}
+
+func GetUserIDFromContext(ctx context.Context) (uuid.UUID, error) {
+	tokenString, err := GetToken(ctx)
+	if err != nil {
+		return uuid.Nil, errors.Wrap(err, "sharedkernel.GetToken")
+	}
+
+	tokenClaims, err := ParseToken(ctx, tokenString)
+	if err != nil {
+		return uuid.Nil, errors.Wrap(err, "sharedkernel.ParseToken")
+	}
+
+	id, err := uuid.Parse(tokenClaims.Id)
+	if err != nil {
+		return uuid.Nil, errors.Wrap(err, "uuid.Parse")
+	}
+	return id, nil
 }
 
 func TokenInterceptor(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {

@@ -28,7 +28,7 @@ func NewPostgresDB(url DBConnString) (DBEngine, error) {
 
 	pg := &postgres{
 		connAttempts: _defaultConnAttempts,
-		connTimeout: _defaultConnTimeout,
+		connTimeout:  _defaultConnTimeout,
 	}
 
 	var err error
@@ -42,7 +42,7 @@ func NewPostgresDB(url DBConnString) (DBEngine, error) {
 
 		time.Sleep(pg.connTimeout)
 
-		pg.connAttempts --
+		pg.connAttempts--
 	}
 
 	slog.Info("connected to postgres")

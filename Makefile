@@ -3,11 +3,16 @@ export
 
 all: build test
 
-run: run-user run-proxy
+run: run-user run-proxy run-room
 
 run-user:
 	cd cmd/user && go mod tidy && go mod download && \
 	CGO_ENABLED=0 go run github.com/Watch2Gather/server/cmd/user
+.PHONY: run-product
+
+run-room:
+	cd cmd/room && go mod tidy && go mod download && \
+	CGO_ENABLED=0 go run -tags migrate github.com/Watch2Gather/server/cmd/room
 .PHONY: run-product
 
 run-proxy:
@@ -42,8 +47,8 @@ docker-compose-build:
 .PHONY: docker-compose-build
 
 wire:
-	cd internal/user/app && wire && cd -
-	# cd internal/app1/app && wire && cd - && \
+	cd internal/user/app && wire && cd - && \
+	cd internal/room/app && wire && cd -
 	# cd internal/app2/app && wire && cd - && \
 	# cd internal/app3/app && wire && cd -
 .PHONY: wire

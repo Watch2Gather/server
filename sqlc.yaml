@@ -8,14 +8,18 @@ sql:
         package: "postgresql"
         out: "internal/user/infras/postgresql"
         emit_json_tags: true
-  # - engine: "postgresql"
-  #   queries: "internal/room/infras/postgresql/query/query.sql"
-  #   schema: "db/migrations/000001_init_db.up.sql"
-  #   gen:
-  #     go:
-  #       package: "postgresql"
-  #       out: "internal/room/infras/postgresql"
-  #       emit_json_tags: true
+  - engine: "postgresql"
+    queries: "internal/room/infras/postgresql/query/query.sql"
+    schema:
+    - "db/migrations/000001_users.up.sql"
+    - "db/migrations/000003_rooms.up.sql"
+    - "db/migrations/000007_participants.up.sql"
+    - "db/migrations/000006_messages.up.sql"
+    gen:
+      go:
+        package: "postgresql"
+        out: "internal/room/infras/postgresql"
+        emit_json_tags: true
   # - engine: "postgresql"
   #   queries: "internal/movie/infras/postgresql/query/query.sql"
   #   schema: "db/migrations/000001_init_db.up.sql"

@@ -3,7 +3,6 @@ package users
 import (
 	"context"
 
-	"github.com/google/uuid"
 	"github.com/google/wire"
 	"github.com/pkg/errors"
 
@@ -84,19 +83,9 @@ func (u *usecase) ChangeUserData(ctx context.Context, model *domain.User) (*doma
 }
 
 func (u *usecase) RefreshToken(ctx context.Context, model *domain.Token) (*domain.Token, error) {
-	tokenString, err := sharedkernel.GetToken(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "sharedkernel.GetToken")
-	}
-
-	claims, err := sharedkernel.ParseToken(ctx, tokenString)
+	id, err := sharedkernel.GetUserIDFromContext(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "sharedkernel.ParseToken")
-	}
-
-	id, err := uuid.Parse(claims.Id)
-	if err != nil {
-		return nil, errors.Wrap(err, "uuid.Parse")
 	}
 
 	user, err := u.userRepo.FindByID(ctx, id)
