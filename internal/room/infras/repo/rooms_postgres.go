@@ -2,14 +2,17 @@ package repo
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/google/wire"
 	"github.com/pkg/errors"
+	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"github.com/google/uuid"
 
+	sharedkernel "github.com/Watch2Gather/server/internal/pkg/shared_kernel"
 	"github.com/Watch2Gather/server/internal/room/domain"
 	"github.com/Watch2Gather/server/internal/room/infras/postgresql"
 	"github.com/Watch2Gather/server/internal/room/usecases/rooms"
@@ -55,20 +58,30 @@ func (r roomRepo) CreateRoom(ctx context.Context, model *domain.CreateRoomModel)
 	resRoom.OwnerID = room.OwnerID
 	resRoom.ID = room.ID
 
-	// partErr := status.New(codes.InvalidArgument, "users not found")
-	var invalidUUIDS uuid.UUIDs
+	st := status.New(codes.InvalidArgument, "users not found")
+	br := &errdetails.BadRequest{}
+
 	for _, p := range model.ParticipantIds {
 		err = qtx.AddParticipant(ctx, postgresql.AddParticipantParams{
 			RoomID: room.ID,
 			UserID: p,
 		})
 		if err != nil {
-			invalidUUIDS = append(invalidUUIDS, p)
+			v := &errdetails.BadRequest_FieldViolation{
+				Field:       "userID",
+				Description: "userID " + p.String() + " does not exist",
+			}
+			br.FieldViolations = append(br.FieldViolations, v)
 		}
 		resRoom.ParticipantIds = append(resRoom.ParticipantIds, p)
 	}
-	if len(invalidUUIDS) > 0{
-		return nil, errors.New("log")
+	if len(br.FieldViolations) > 0 {
+		st, err = st.WithDetails(br)
+		if err != nil {
+			slog.Error("Caught error", "trace", errors.Wrap(err, "st.WithDetails"))
+			return nil, sharedkernel.ErrServer
+		}
+		return nil, st.Err()
 	}
 
 	err = tx.Commit()

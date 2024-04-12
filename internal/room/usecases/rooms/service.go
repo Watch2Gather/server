@@ -6,6 +6,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/google/wire"
 	"github.com/pkg/errors"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	sharedkernel "github.com/Watch2Gather/server/internal/pkg/shared_kernel"
 	"github.com/Watch2Gather/server/internal/room/domain"
@@ -41,6 +43,9 @@ func (u *usecase) CreateRoom(ctx context.Context, model *domain.CreateRoomModel)
 
 	room, err := u.roomRepo.CreateRoom(ctx, model)
 	if err != nil {
+		if status.Code(err) == codes.InvalidArgument {
+			return nil, err
+		}
 		return nil, errors.Wrap(err, "roomRepo.CreateRoom")
 	}
 

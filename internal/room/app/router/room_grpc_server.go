@@ -6,7 +6,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/google/wire"
-	"github.com/lib/pq"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -54,7 +53,6 @@ func (g *roomGRPCServer) CreateRoom(ctx context.Context, req *gen.CreateRoomRequ
 	}
 
 	var ids uuid.UUIDs
-	partErr := status.New(codes.InvalidArgument, "users not found")
 	for _, id := range req.GetParticipantIds() {
 		uid, err := uuid.Parse(id)
 		if err != nil {
@@ -69,12 +67,16 @@ func (g *roomGRPCServer) CreateRoom(ctx context.Context, req *gen.CreateRoomRequ
 		ParticipantIds: ids,
 	})
 	if err != nil {
-		if pqErr, ok := err.(*pq.Error); ok {
-			switch pqErr.Code.Name() {
-			case "unique_violation":
-				return nil, domain.ErrUserAlreadyExists
-			}
+		if status.Code(err) == codes.InvalidArgument {
+			return nil, err
 		}
+
+		// if pqErr, ok := err.(*pq.Error); ok {
+		// 	switch pqErr.Code.Name() {
+		// 	case "unique_violation":
+		// 		return nil, domain.ErrUserAlreadyExists
+		// 	}
+		// }
 		slog.Error("Caught error", "trace", errors.Wrap(err, "uc.CreateRoom"))
 		return nil, sharedkernel.ErrServer
 	}
