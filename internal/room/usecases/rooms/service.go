@@ -40,6 +40,7 @@ func (u *usecase) CreateRoom(ctx context.Context, model *domain.CreateRoomModel)
 	}
 
 	model.OwnerID = id
+	model.ParticipantIds = append(model.ParticipantIds, model.OwnerID)
 
 	room, err := u.roomRepo.CreateRoom(ctx, model)
 	if err != nil {
@@ -64,11 +65,22 @@ func (usecase) SendMessage(ctx context.Context, model *domain.MessageModel) erro
 	panic("not implemented") // TODO: Implement
 }
 
-func (usecase) GetRoomsByUser(ctx context.Context, id uuid.UUID) ([]*domain.RoomModel, error) {
-	panic("not implemented") // TODO: Implement
+func (u *usecase) GetRoomsByUser(ctx context.Context) ([]*domain.RoomModel, error) {
+	id, err := sharedkernel.GetUserIDFromContext(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "sharedkernel.GetUserIDFromContext")
+	}
+
+	rooms, err := u.roomRepo.GetRoomsByUserID(ctx, id)
+	if err != nil {
+		return nil, errors.Wrap(err, "roomRepo.GetRoomsByUserID")
+	}
+
+
+	return rooms, nil
 }
 
-func (usecase) InviteToRoom(ctx context.Context, ids []uuid.UUID) (*domain.RoomModel, error) {
+func (usecase) InviteToRoom(ctx context.Context, model *domain.AddParticipantsModel) (*domain.RoomModel, error) {
 	panic("not implemented") // TODO: Implement
 }
 

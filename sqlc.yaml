@@ -13,7 +13,7 @@ sql:
     schema:
     - "db/migrations/000001_users.up.sql"
     - "db/migrations/000003_rooms.up.sql"
-    - "db/migrations/000007_participants.up.sql"
+    - "db/migrations/000005_participants.up.sql"
     - "db/migrations/000006_messages.up.sql"
     gen:
       go:

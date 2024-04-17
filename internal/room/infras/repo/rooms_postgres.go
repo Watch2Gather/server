@@ -25,6 +25,7 @@ type roomRepo struct {
 	pg postgres.DBEngine
 }
 
+
 var _ rooms.RoomRepo = (*roomRepo)(nil)
 
 var RepositorySet = wire.NewSet(NewRoomRepo)
@@ -36,7 +37,6 @@ func NewRoomRepo(
 }
 
 func (r roomRepo) CreateRoom(ctx context.Context, model *domain.CreateRoomModel) (*domain.RoomModel, error) {
-	resRoom := &domain.RoomModel{}
 	db := r.pg.GetDB()
 	tx, err := db.Begin()
 	if err != nil {
@@ -54,9 +54,6 @@ func (r roomRepo) CreateRoom(ctx context.Context, model *domain.CreateRoomModel)
 	if err != nil {
 		return nil, errors.Wrap(err, "qtx.CreateRoom")
 	}
-	resRoom.Name = room.Name
-	resRoom.OwnerID = room.OwnerID
-	resRoom.ID = room.ID
 
 	st := status.New(codes.InvalidArgument, "users not found")
 	br := &errdetails.BadRequest{}
@@ -73,7 +70,6 @@ func (r roomRepo) CreateRoom(ctx context.Context, model *domain.CreateRoomModel)
 			}
 			br.FieldViolations = append(br.FieldViolations, v)
 		}
-		resRoom.ParticipantIds = append(resRoom.ParticipantIds, p)
 	}
 	if len(br.FieldViolations) > 0 {
 		st, err = st.WithDetails(br)
@@ -88,15 +84,43 @@ func (r roomRepo) CreateRoom(ctx context.Context, model *domain.CreateRoomModel)
 	if err != nil {
 		return nil, errors.Wrap(err, "tx.Commit")
 	}
-	return resRoom, nil
+
+	var resRoom domain.RoomModel
+
+	resRoom.Name = room.Name
+	resRoom.OwnerID = room.OwnerID
+	resRoom.ID = room.ID
+	resRoom.ParticipantsCount = len(model.ParticipantIds)
+
+	return &resRoom, nil
 }
 
 func (roomRepo) CreateMessage(_ context.Context, _ *domain.CreateMessageModel) (_ error) {
 	panic("not implemented") // TODO: Implement
 }
 
-func (roomRepo) GetRoomsByUserID(_ context.Context, _ uuid.UUID) (_ []*domain.RoomModel, _ error) {
-	panic("not implemented") // TODO: Implement
+func (r *roomRepo) GetRoomsByUserID(ctx context.Context, id uuid.UUID) (_ []*domain.RoomModel, _ error) {
+	querier := postgresql.New(r.pg.GetDB())
+
+	rooms, err := querier.GetRoomsByUserId(ctx, id)
+	if err != nil {
+		return nil, errors.Wrap(err, "querier.GetRoomsByUserID")
+	}
+
+	var roomsModel []*domain.RoomModel
+
+	for _, room := range rooms {
+		roomsModel = append(roomsModel, &domain.RoomModel{
+			Name:              room.Name,
+			OwnerID:           room.OwnerID,
+			MovieID:           room.MovieID.UUID,
+			Timecode:          0,
+			ID:                room.ID,
+			ParticipantsCount: int(room.Count),
+		})
+	}
+
+	return roomsModel, nil
 }
 
 func (roomRepo) GetParticipantsByRoomID(_ context.Context, _ uuid.UUID) (_ []*domain.ParticipantModel, _ error) {
@@ -111,8 +135,44 @@ func (roomRepo) DeleteRoom(_ context.Context, _ *domain.DeleteRoomModel) (_ erro
 	panic("not implemented") // TODO: Implement
 }
 
-func (roomRepo) AddParticipant(_ context.Context, _ *domain.AddParticipantModel) (_ error) {
-	panic("not implemented") // TODO: Implement
+func (r *roomRepo) AddParticipants(ctx context.Context, model *domain.AddParticipantsModel) (error) {
+	db := r.pg.GetDB()
+	tx, err := db.Begin()
+	if err != nil {
+		return errors.Wrap(err, "db.Begin")
+	}
+	defer tx.Rollback()
+
+	querier := postgresql.New(db)
+
+	qtx := querier.WithTx(tx)
+
+	st := status.New(codes.InvalidArgument, "users not found")
+	br := &errdetails.BadRequest{}
+
+	for _, p := range model.ParticipantIds {
+		err = qtx.AddParticipant(ctx, postgresql.AddParticipantParams{
+			RoomID: model.RoomID,
+			UserID: p,
+		})
+		if err != nil {
+			v := &errdetails.BadRequest_FieldViolation{
+				Field:       "userID",
+				Description: "userID " + p.String() + " does not exist",
+			}
+			br.FieldViolations = append(br.FieldViolations, v)
+		}
+	}
+	if len(br.FieldViolations) > 0 {
+		st, err = st.WithDetails(br)
+		if err != nil {
+			slog.Error("Caught error", "trace", errors.Wrap(err, "st.WithDetails"))
+			return sharedkernel.ErrServer
+		}
+		return st.Err()
+	}
+
+  return tx.Commit()
 }
 
 func (roomRepo) RemoveParticipant(_ context.Context, _ *domain.RemoveParticipantModel) (_ error) {
@@ -121,4 +181,15 @@ func (roomRepo) RemoveParticipant(_ context.Context, _ *domain.RemoveParticipant
 
 func (roomRepo) UpdateRoom(_ context.Context, _ *domain.UpdateRoomModel) (_ *domain.RoomModel, _ error) {
 	panic("not implemented") // TODO: Implement
+}
+
+func (r *roomRepo) GetRoomOwner(ctx context.Context, id uuid.UUID) (uuid.UUID, error) {
+	querier := postgresql.New(r.pg.GetDB())
+
+	ownerID, err := querier.GetRoomOwner(ctx, id)
+	if err != nil {
+		return uuid.Nil, errors.Wrap(err, "querier.GetRoomOwner")
+	}
+
+	return ownerID, nil
 }

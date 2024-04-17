@@ -31,23 +31,18 @@ type MessagesByRoomIDModel struct {
 	Offset int
 }
 
-type AddParticipantModel struct {
-	RoomID uuid.UUID
-	UserID uuid.UUID
-}
-
 type RemoveParticipantModel struct {
 	roomID uuid.UUID
 	UserID uuid.UUID
 }
 
 type RoomModel struct {
-	Name           string
-	OwnerID        uuid.UUID
-	MovieID        uuid.UUID
-	Timecode       int
-	ID             uuid.UUID
-	ParticipantIds uuid.UUIDs
+	Name              string
+	ParticipantsCount int
+	Timecode          int
+	OwnerID           uuid.UUID
+	MovieID           uuid.UUID
+	ID                uuid.UUID
 }
 
 type ParticipantModel struct {
@@ -56,10 +51,22 @@ type ParticipantModel struct {
 	UserID   uuid.UUID
 }
 
+type RoomsByUserModel struct {
+	ID     uuid.UUID
+	Limit  int
+	Offset int
+}
+
 type MessageModel struct {
 	Content   string
 	CreatedAt int
 	UserID    uuid.UUID
 	RoomID    uuid.UUID
 	MessageID uuid.UUID
+}
+
+type AddParticipantsModel struct {
+	ParticipantIds uuid.UUIDs
+	RoomID         uuid.UUID
+	OwnerID        uuid.UUID
 }

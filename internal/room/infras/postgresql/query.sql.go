@@ -87,7 +87,7 @@ func (q *Queries) CreateRoom(ctx context.Context, arg CreateRoomParams) (AppRoom
 
 const deleteRoom = `-- name: DeleteRoom :exec
 DELETE FROM "app".rooms
-  WHERE id=$1 and owner_id=$2
+  WHERE id=$1 AND owner_id=$2
 `
 
 type DeleteRoomParams struct {
@@ -144,9 +144,9 @@ func (q *Queries) GetMessagesByRoomId(ctx context.Context, arg GetMessagesByRoom
 }
 
 const getParticipantsByRoomId = `-- name: GetParticipantsByRoomId :many
-SELECT username, avatar, id FROM "app".users as u
-INNER JOIN "app".participants as p
-  on u.id = p.user_id
+SELECT username, avatar, id FROM "app".users AS u
+INNER JOIN "app".participants AS p
+  ON u.id = p.user_id
   WHERE p.room_id=$1
 `
 
@@ -179,28 +179,54 @@ func (q *Queries) GetParticipantsByRoomId(ctx context.Context, roomID uuid.UUID)
 	return items, nil
 }
 
+const getRoomOwner = `-- name: GetRoomOwner :one
+SELECT owner_id FROM "app".rooms
+WHERE id=$1
+`
+
+func (q *Queries) GetRoomOwner(ctx context.Context, id uuid.UUID) (uuid.UUID, error) {
+	row := q.db.QueryRowContext(ctx, getRoomOwner, id)
+	var owner_id uuid.UUID
+	err := row.Scan(&owner_id)
+	return owner_id, err
+}
+
 const getRoomsByUserId = `-- name: GetRoomsByUserId :many
-SELECT id, name, owner_id, movie_id, timecode FROM "app".rooms as r
-INNER JOIN "app".participants as p
+SELECT id, name, owner_id, movie_id, timecode, (
+  SELECT COUNT(*) FROM "app".participants as p
+  WHERE p.room_id = r.id
+)
+FROM "app".rooms as r
+INNER JOIN "app".participants AS p
   ON r.id = p.room_id
   WHERE p.user_id = $1
 `
 
-func (q *Queries) GetRoomsByUserId(ctx context.Context, userID uuid.UUID) ([]AppRoom, error) {
+type GetRoomsByUserIdRow struct {
+	ID       uuid.UUID     `json:"id"`
+	Name     string        `json:"name"`
+	OwnerID  uuid.UUID     `json:"owner_id"`
+	MovieID  uuid.NullUUID `json:"movie_id"`
+	Timecode sql.NullTime  `json:"timecode"`
+	Count    int64         `json:"count"`
+}
+
+func (q *Queries) GetRoomsByUserId(ctx context.Context, userID uuid.UUID) ([]GetRoomsByUserIdRow, error) {
 	rows, err := q.db.QueryContext(ctx, getRoomsByUserId, userID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []AppRoom
+	var items []GetRoomsByUserIdRow
 	for rows.Next() {
-		var i AppRoom
+		var i GetRoomsByUserIdRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
 			&i.OwnerID,
 			&i.MovieID,
 			&i.Timecode,
+			&i.Count,
 		); err != nil {
 			return nil, err
 		}

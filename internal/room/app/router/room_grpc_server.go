@@ -91,12 +91,44 @@ func (g *roomGRPCServer) CreateRoom(ctx context.Context, req *gen.CreateRoomRequ
 
 func (g *roomGRPCServer) GetRoomsByUser(ctx context.Context, req *gen.GetRoomsByUserRequest) (*gen.GetRoomsByUserResponse, error) {
 	slog.Info("GET: GetRoomsByUser")
+	rooms, err := g.uc.GetRoomsByUser(ctx)
 
-	panic("not implemented") // TODO: Implement
+	if err != nil {
+		slog.Error("Caught error", "trace", errors.Wrap(err, "uc.CreateRoom"))
+		return nil, sharedkernel.ErrServer
+	}
+
+	res := &gen.GetRoomsByUserResponse{
+		Rooms: []*gen.Room{},
+	}
+
+	for _, room := range rooms {
+		res.Rooms = append(res.Rooms, &gen.Room{
+			OwnerId:           room.OwnerID.String(),
+			ParticipantsCount: int32(room.ParticipantsCount),
+			FilmTitle:         "",
+			FilmPoster:        "",
+		})
+	}
+
+	return res, nil
 }
 
-func (roomGRPCServer) InviteToRoom(_ context.Context, _ *gen.InviteToRoomRequest) (_ *gen.InviteToRoomResponse, _ error) {
-	panic("not implemented") // TODO: Implement
+func (g *roomGRPCServer) InviteToRoom(ctx context.Context, req *gen.InviteToRoomRequest) (*gen.InviteToRoomResponse, error) {
+	slog.Info("POST: InviteToRoom")
+	_, err := g.uc.InviteToRoom(ctx, &domain.AddParticipantsModel{
+		RoomID: [16]byte{},
+	})
+
+	if err != nil {
+		slog.Error("Caught error", "trace", errors.Wrap(err, "uc.CreateRoom"))
+		return nil, sharedkernel.ErrServer
+	}
+
+	res := &gen.InviteToRoomResponse{
+	}
+
+	return res, nil
 }
 
 func (roomGRPCServer) EnterRoom(req *gen.EnterRoomRequest, srv gen.RoomService_EnterRoomServer) error {

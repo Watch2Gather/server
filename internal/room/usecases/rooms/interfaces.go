@@ -17,16 +17,17 @@ type (
 		GetMessagesByRoomID(context.Context, *domain.MessagesByRoomIDModel) ([]*domain.MessageModel, error)
 		UpdateRoom(context.Context, *domain.UpdateRoomModel) (*domain.RoomModel, error)
 		DeleteRoom(context.Context, *domain.DeleteRoomModel) error
-		AddParticipant(context.Context, *domain.AddParticipantModel) error
+		AddParticipants(context.Context, *domain.AddParticipantsModel) error
 		RemoveParticipant(context.Context, *domain.RemoveParticipantModel) error
+		GetRoomOwner(context.Context, uuid.UUID) (uuid.UUID, error)
 	}
 	UseCase interface {
 		CreateRoom(context.Context, *domain.CreateRoomModel) (*domain.RoomModel, error)
 		DeleteRoom(context.Context, uuid.UUID) error
 		LeaveRoom(context.Context, uuid.UUID) error
 		SendMessage(context.Context, *domain.MessageModel) error
-		GetRoomsByUser(context.Context, uuid.UUID) ([]*domain.RoomModel, error)
-		InviteToRoom(context.Context, []uuid.UUID) (*domain.RoomModel, error)
+		GetRoomsByUser(context.Context) ([]*domain.RoomModel, error)
+		InviteToRoom(context.Context, *domain.AddParticipantsModel) (*domain.RoomModel, error)
 		EnterRoom(context.Context, uuid.UUID) (any, error)
 		UpdateRoom(context.Context, *domain.RoomModel) (*domain.RoomModel, error)
 	}
