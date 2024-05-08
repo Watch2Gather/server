@@ -24,6 +24,7 @@ type roomGRPCServer struct {
 	uc  rooms.UseCase
 }
 
+
 var _ gen.RoomServiceServer = (*roomGRPCServer)(nil)
 
 var RoomGRPCServerSet = wire.NewSet(NewGRPCRoomServer)
@@ -44,6 +45,8 @@ func NewGRPCRoomServer(
 
 	return &svc
 }
+
+var roomMessages map[uuid.UUID][]chan *gen.Message = make(map[uuid.UUID][]chan *gen.Message)
 
 func (g *roomGRPCServer) CreateRoom(ctx context.Context, req *gen.CreateRoomRequest) (*gen.CreateRoomResponse, error) {
 	slog.Info("POST: CreateRoom")
@@ -91,8 +94,8 @@ func (g *roomGRPCServer) CreateRoom(ctx context.Context, req *gen.CreateRoomRequ
 
 func (g *roomGRPCServer) GetRoomsByUser(ctx context.Context, req *gen.GetRoomsByUserRequest) (*gen.GetRoomsByUserResponse, error) {
 	slog.Info("GET: GetRoomsByUser")
-	rooms, err := g.uc.GetRoomsByUser(ctx)
 
+	rooms, err := g.uc.GetRoomsByUser(ctx)
 	if err != nil {
 		slog.Error("Caught error", "trace", errors.Wrap(err, "uc.CreateRoom"))
 		return nil, sharedkernel.ErrServer
@@ -114,25 +117,90 @@ func (g *roomGRPCServer) GetRoomsByUser(ctx context.Context, req *gen.GetRoomsBy
 	return res, nil
 }
 
-func (g *roomGRPCServer) InviteToRoom(ctx context.Context, req *gen.InviteToRoomRequest) (*gen.InviteToRoomResponse, error) {
-	slog.Info("POST: InviteToRoom")
-	_, err := g.uc.InviteToRoom(ctx, &domain.AddParticipantsModel{
-		RoomID: [16]byte{},
-	})
+func (g *roomGRPCServer) GetUserIDsByRoom(ctx context.Context, req *gen.GetUserIDsByRoomRequest) (*gen.GetUserIDsByRoomResponse, error) {
+	slog.Info("GET: GetRoomsByUser")
 
+	id, err := uuid.Parse(req.GetRoomId())
 	if err != nil {
-		slog.Error("Caught error", "trace", errors.Wrap(err, "uc.CreateRoom"))
+		slog.Error("Caught error", "trace", errors.Wrap(err, "uuid.Parse"))
 		return nil, sharedkernel.ErrServer
 	}
 
-	res := &gen.InviteToRoomResponse{
+	participants, err := g.uc.GetParticipantsByRoomID(ctx, id)
+	if err != nil {
+		slog.Error("Caught error", "trace", errors.Wrap(err, "uc.GetParticipantsByRoomID"))
+		return nil, sharedkernel.ErrServer
+	}
+
+	res := &gen.GetUserIDsByRoomResponse{
+		ParticipantIds: participants.Strings(),
 	}
 
 	return res, nil
 }
 
-func (roomGRPCServer) EnterRoom(req *gen.EnterRoomRequest, srv gen.RoomService_EnterRoomServer) error {
-	panic("not implemented") // TODO: Implement
+func (g *roomGRPCServer) InviteToRoom(ctx context.Context, req *gen.InviteToRoomRequest) (*gen.InviteToRoomResponse, error) {
+	slog.Info("POST: InviteToRoom")
+
+	_, err := g.uc.InviteToRoom(ctx, &domain.AddParticipantsModel{
+		RoomID: [16]byte{},
+	})
+	if err != nil {
+		slog.Error("Caught error", "trace", errors.Wrap(err, "uc.CreateRoom"))
+		return nil, sharedkernel.ErrServer
+	}
+
+	res := &gen.InviteToRoomResponse{}
+
+	return res, nil
+}
+
+func (g *roomGRPCServer) EnterRoom(req *gen.EnterRoomRequest, srv gen.RoomService_EnterRoomServer) error {
+	slog.Info("GET: EnterRoom")
+
+	ctx := srv.Context()
+	done := ctx.Done()
+
+	roomID, err := uuid.Parse(req.RoomId)
+	if err != nil {
+		slog.Error("Caught error", "trace", errors.Wrap(err, "uuid.Parse"))
+		return sharedkernel.ErrServer
+	}
+
+	roomChan := make(chan *gen.Message)
+	roomMessages[roomID] = append(roomMessages[roomID], roomChan)
+
+	messages, err := g.uc.EnterRoom(ctx, roomID)
+	slog.Debug("Getting Messages", "messages", messages)
+	if err != nil {
+		slog.Error("Caught error", "trace", errors.Wrap(err, "uc.CreateRoom"))
+		return sharedkernel.ErrServer
+	}
+
+	for _, message := range messages {
+		srv.Send(&gen.Message{
+			SenderId: message.UserID.String(),
+			RoomId:   message.RoomID.String(),
+			Text:     message.Content,
+		})
+	}
+
+	go func() {
+		var message *gen.Message
+		for {
+			select {
+			case message = <-roomChan:
+				slog.Debug("received Messsage", "message", message)
+				srv.Send(message)
+			case <-done:
+				return
+			}
+		}
+	}()
+
+	<-done
+	slog.Debug("Chat leaved")
+	return nil
 }
 
 func (roomGRPCServer) UpdateRoom(_ context.Context, _ *gen.UpdateRoomRequest) (_ *gen.UpdateRoomResponse, _ error) {
@@ -143,6 +211,28 @@ func (roomGRPCServer) DeleteRoom(_ context.Context, _ *gen.DeleteRoomRequest) (_
 	panic("not implemented") // TODO: Implement
 }
 
-func (roomGRPCServer) SendMessage(_ context.Context, _ *gen.Message) (_ *gen.SendMessageResponse, _ error) {
-	panic("not implemented") // TODO: Implement
+func (g *roomGRPCServer) SendMessage(ctx context.Context, req *gen.Message) (*gen.SendMessageResponse, error) {
+	slog.Info("POST: SendMessage")
+
+	id, err := uuid.Parse(req.GetRoomId())
+	if err != nil {
+		slog.Error("Caught error", "trace", errors.Wrap(err, "uuid.Parse"))
+		return nil, sharedkernel.ErrServer
+	}
+	err = g.uc.SendMessage(ctx, &domain.CreateMessageModel{
+		Content: req.GetText(),
+		RoomID:  id,
+	})
+	if err != nil {
+		slog.Error("Caught error", "trace", errors.Wrap(err, "uc.CreateRoom"))
+		return nil, sharedkernel.ErrServer
+	}
+
+	go func() {
+		for _, rChan := range roomMessages[id] {
+			rChan <- req
+		}
+	}()
+
+	return &gen.SendMessageResponse{}, nil
 }

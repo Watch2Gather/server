@@ -23,6 +23,8 @@ type (
 		UserPort int    `env-required:"true" yaml:"user_port" env:"GRPC_USER_PORT"`
 		RoomHost string `env-required:"true" yaml:"room_host" env:"GRPC_ROOM_HOST"`
 		RoomPort int    `env-required:"true" yaml:"room_port" env:"GRPC_ROOM_PORT"`
+		MovieHost string `env-required:"true" yaml:"movie_host" env:"GRPC_MOVIE_HOST"`
+		MoviePort int    `env-required:"true" yaml:"movie_port" env:"GRPC_MOVIE_PORT"`
 	}
 )
 

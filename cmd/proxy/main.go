@@ -27,6 +27,7 @@ func newGateway(
 ) (http.Handler, error) {
 	userEndpoint := fmt.Sprintf("%s:%d", cfg.UserHost, cfg.UserPort)
 	roomEndpoint := fmt.Sprintf("%s:%d", cfg.RoomHost, cfg.RoomPort)
+	movieEndpoint := fmt.Sprintf("%s:%d", cfg.MovieHost, cfg.MoviePort)
 
 	mux := gwruntime.NewServeMux(opts...)
 	dialOpts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
@@ -39,6 +40,11 @@ func newGateway(
 	}
 
 	err = gen.RegisterRoomServiceHandlerFromEndpoint(ctx, mux, roomEndpoint, dialOpts)
+	if err != nil {
+		return nil, err
+	}
+
+	err = gen.RegisterMovieServiceHandlerFromEndpoint(ctx, mux, movieEndpoint, dialOpts)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +80,7 @@ func preflightHandler(w http.ResponseWriter, r *http.Request) {
 
 func withLogger(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		slog.Info("Run request", "http_method", r.Method, "http_url", r.URL)
+		slog.Info("Run request", "http_method", r.Method, "http_host", r.Host, "http_url", r.URL)
 
 		h.ServeHTTP(w, r)
 	})

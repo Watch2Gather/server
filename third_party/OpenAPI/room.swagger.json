@@ -73,45 +73,6 @@
       }
     },
     "/api/v1/rooms/{roomId}": {
-      "get": {
-        "summary": "Enter room",
-        "description": "Enter a room and receive messages",
-        "operationId": "RoomService_EnterRoom",
-        "responses": {
-          "200": {
-            "description": "A successful response.(streaming responses)",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "result": {
-                  "$ref": "#/definitions/roomapiMessage"
-                },
-                "error": {
-                  "$ref": "#/definitions/rpcStatus"
-                }
-              },
-              "title": "Stream result of roomapiMessage"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "roomId",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "Room"
-        ]
-      },
       "delete": {
         "summary": "Delete room",
         "description": "Delete room",
@@ -136,44 +97,6 @@
             "in": "path",
             "required": true,
             "type": "string"
-          }
-        ],
-        "tags": [
-          "Room"
-        ]
-      },
-      "post": {
-        "summary": "Send message",
-        "description": "Send a message to a room",
-        "operationId": "RoomService_SendMessage",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/roomapiSendMessageResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "roomId",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/RoomServiceSendMessageBody"
-            }
           }
         ],
         "tags": [
@@ -252,6 +175,117 @@
             "schema": {
               "$ref": "#/definitions/RoomServiceInviteToRoomBody"
             }
+          }
+        ],
+        "tags": [
+          "Room"
+        ]
+      }
+    },
+    "/api/v1/rooms/{roomId}/messages": {
+      "get": {
+        "summary": "Enter room",
+        "description": "Enter a room and receive messages",
+        "operationId": "RoomService_EnterRoom",
+        "responses": {
+          "200": {
+            "description": "A successful response.(streaming responses)",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "$ref": "#/definitions/roomapiMessage"
+                },
+                "error": {
+                  "$ref": "#/definitions/rpcStatus"
+                }
+              },
+              "title": "Stream result of roomapiMessage"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "roomId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Room"
+        ]
+      },
+      "post": {
+        "summary": "Send message",
+        "description": "Send a message to a room",
+        "operationId": "RoomService_SendMessage",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/roomapiSendMessageResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "roomId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/RoomServiceSendMessageBody"
+            }
+          }
+        ],
+        "tags": [
+          "Room"
+        ]
+      }
+    },
+    "/api/v1/rooms/{roomId}/users": {
+      "get": {
+        "summary": "Get users by room id",
+        "description": "Get all user ids in a room",
+        "operationId": "RoomService_GetUserIDsByRoom",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/roomapiGetUserIDsByRoomResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "roomId",
+            "in": "path",
+            "required": true,
+            "type": "string"
           }
         ],
         "tags": [
@@ -339,6 +373,17 @@
           "items": {
             "type": "object",
             "$ref": "#/definitions/roomapiRoom"
+          }
+        }
+      }
+    },
+    "roomapiGetUserIDsByRoomResponse": {
+      "type": "object",
+      "properties": {
+        "participantIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
           }
         }
       }

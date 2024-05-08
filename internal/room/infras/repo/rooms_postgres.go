@@ -25,7 +25,6 @@ type roomRepo struct {
 	pg postgres.DBEngine
 }
 
-
 var _ rooms.RoomRepo = (*roomRepo)(nil)
 
 var RepositorySet = wire.NewSet(NewRoomRepo)
@@ -95,8 +94,19 @@ func (r roomRepo) CreateRoom(ctx context.Context, model *domain.CreateRoomModel)
 	return &resRoom, nil
 }
 
-func (roomRepo) CreateMessage(_ context.Context, _ *domain.CreateMessageModel) (_ error) {
-	panic("not implemented") // TODO: Implement
+func (r *roomRepo) CreateMessage(ctx context.Context, model *domain.CreateMessageModel) error {
+	querier := postgresql.New(r.pg.GetDB())
+
+	_, err := querier.CreateMessage(ctx, postgresql.CreateMessageParams{
+		RoomID:  model.RoomID,
+		UserID:  model.UserID,
+		Content: model.Content,
+	})
+	if err != nil {
+		return errors.Wrap(err, "querier.CreateMessage")
+	}
+
+	return nil
 }
 
 func (r *roomRepo) GetRoomsByUserID(ctx context.Context, id uuid.UUID) (_ []*domain.RoomModel, _ error) {
@@ -123,19 +133,55 @@ func (r *roomRepo) GetRoomsByUserID(ctx context.Context, id uuid.UUID) (_ []*dom
 	return roomsModel, nil
 }
 
-func (roomRepo) GetParticipantsByRoomID(_ context.Context, _ uuid.UUID) (_ []*domain.ParticipantModel, _ error) {
-	panic("not implemented") // TODO: Implement
+func (r *roomRepo) GetParticipantsByRoomID(ctx context.Context, id uuid.UUID) (uuid.UUIDs,error) {
+	querier := postgresql.New(r.pg.GetDB())
+
+	participants, err := querier.GetParticipantsByRoomId(ctx, id)
+	if err != nil {
+		return nil, errors.Wrap(err, "querier.GetParticipantsByRoomID")
+	}
+
+	ids := make(uuid.UUIDs, 0)
+	for _, parparticipant := range participants {
+		ids = append(ids, parparticipant.ID)
+	}
+
+
+	return ids, nil
 }
 
-func (roomRepo) GetMessagesByRoomID(_ context.Context, _ *domain.MessagesByRoomIDModel) (_ []*domain.MessageModel, _ error) {
-	panic("not implemented") // TODO: Implement
+func (r *roomRepo) GetMessagesByRoomID(ctx context.Context, model *domain.MessagesByRoomIDModel) ([]*domain.MessageModel, error) {
+	querier := postgresql.New(r.pg.GetDB())
+
+	messages, err := querier.GetMessagesByRoomId(ctx, postgresql.GetMessagesByRoomIdParams{
+		RoomID: model.RoomID,
+		Limit:  int32(model.Limit),
+		Offset: int32(model.Offset),
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "querier.GetMessagesByRoomID")
+	}
+
+	var messagesModel []*domain.MessageModel
+
+	for _, message := range messages {
+		messagesModel = append(messagesModel, &domain.MessageModel{
+			Content:   message.Content,
+			CreatedAt: int(message.CreatedAt.UnixNano()),
+			UserID:    message.UserID,
+			RoomID:    message.RoomID,
+			MessageID: message.ID,
+		})
+	}
+
+	return messagesModel, nil
 }
 
 func (roomRepo) DeleteRoom(_ context.Context, _ *domain.DeleteRoomModel) (_ error) {
 	panic("not implemented") // TODO: Implement
 }
 
-func (r *roomRepo) AddParticipants(ctx context.Context, model *domain.AddParticipantsModel) (error) {
+func (r *roomRepo) AddParticipants(ctx context.Context, model *domain.AddParticipantsModel) error {
 	db := r.pg.GetDB()
 	tx, err := db.Begin()
 	if err != nil {
@@ -172,7 +218,7 @@ func (r *roomRepo) AddParticipants(ctx context.Context, model *domain.AddPartici
 		return st.Err()
 	}
 
-  return tx.Commit()
+	return tx.Commit()
 }
 
 func (roomRepo) RemoveParticipant(_ context.Context, _ *domain.RemoveParticipantModel) (_ error) {

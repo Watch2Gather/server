@@ -29,6 +29,16 @@ service RoomService {
       tags: "Room"
     };
   }
+  rpc GetUserIDsByRoom (GetUserIDsByRoomRequest) returns (GetUserIDsByRoomResponse){
+    option (google.api.http) = {
+      get: "/api/v1/rooms/{roomId}/users"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Get users by room id"
+      description: "Get all user ids in a room"
+      tags: "Room"
+    };
+  }
   rpc InviteToRoom (InviteToRoomRequest) returns (InviteToRoomResponse) {
     option (google.api.http) = {
       post: "/api/v1/rooms/{roomId}/invite"
@@ -42,17 +52,17 @@ service RoomService {
   }
   rpc EnterRoom(EnterRoomRequest) returns (stream Message) {
     option (google.api.http) = {
-      get: "/api/v1/rooms/{roomId}"
+      get: "/api/v1/rooms/{roomId}/messages"
     };
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      summary: "Enter room"
+      summary: "Get message stream"
       description: "Enter a room and receive messages"
       tags: "Room"
     };
   }
   rpc SendMessage (Message) returns (SendMessageResponse) {
     option (google.api.http) = {
-      post: "/api/v1/rooms/{roomId}"
+      post: "/api/v1/rooms/{roomId}/messages"
       body: "*"
     };
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
@@ -99,6 +109,14 @@ message GetRoomsByUserRequest {
 
 message GetRoomsByUserResponse {
   repeated Room rooms = 1;
+}
+
+message GetUserIDsByRoomRequest {
+  string roomId = 1;
+}
+
+message GetUserIDsByRoomResponse {
+  repeated string participantIds = 1;
 }
 
 message InviteToRoomRequest {

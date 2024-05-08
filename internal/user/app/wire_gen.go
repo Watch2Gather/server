@@ -15,11 +15,6 @@ import (
 	"google.golang.org/grpc"
 )
 
-import (
-	_ "github.com/golang-migrate/migrate/v4/database/postgres"
-	_ "github.com/golang-migrate/migrate/v4/source/file"
-)
-
 // Injectors from wire.go:
 
 func InitApp(cfg *config.Config, dbConnStr postgres.DBConnString, grpcServer *grpc.Server) (*App, func(), error) {

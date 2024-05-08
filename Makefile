@@ -15,6 +15,11 @@ run-room:
 	CGO_ENABLED=0 go run -tags migrate github.com/Watch2Gather/server/cmd/room
 .PHONY: run-product
 
+run-movie:
+	cd cmd/movie && go mod tidy && go mod download && \
+	CGO_ENABLED=0 go run -tags migrate github.com/Watch2Gather/server/cmd/movie
+.PHONY: run-proxy
+
 run-proxy:
 	cd cmd/proxy && go mod tidy && go mod download && \
 	CGO_ENABLED=0 go run -tags migrate github.com/Watch2Gather/server/cmd/proxy
@@ -48,9 +53,8 @@ docker-compose-build:
 
 wire:
 	cd internal/user/app && wire && cd - && \
-	cd internal/room/app && wire && cd -
-	# cd internal/app2/app && wire && cd - && \
-	# cd internal/app3/app && wire && cd -
+	cd internal/room/app && wire && cd - && \
+	cd internal/movie/app && wire && cd -
 .PHONY: wire
 
 sqlc:

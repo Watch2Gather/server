@@ -1,0 +1,229 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "movie.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "MovieService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/v1/movies": {
+      "get": {
+        "summary": "Get all movies",
+        "description": "Get short info about all available movies",
+        "operationId": "MovieService_GetAllMovies",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/movieapiGetAllMoviesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "Movie"
+        ]
+      },
+      "post": {
+        "summary": "Get movie",
+        "description": "Get full info a movie",
+        "operationId": "MovieService_GetMoviePoster",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/movieapiGetMoviePosterResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/movieapiGetMoviePosterRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Movie"
+        ]
+      }
+    },
+    "/api/v1/movies/{id}": {
+      "get": {
+        "summary": "Get movie",
+        "description": "Get full info a movie",
+        "operationId": "MovieService_GetMovie",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/movieapiMovie"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Movie"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "movieapiGetAllMoviesResponse": {
+      "type": "object",
+      "properties": {
+        "movie": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/movieapiShortMovie"
+          }
+        }
+      }
+    },
+    "movieapiGetMoviePosterRequest": {
+      "type": "object",
+      "properties": {
+        "filePath": {
+          "type": "string"
+        }
+      }
+    },
+    "movieapiGetMoviePosterResponse": {
+      "type": "object",
+      "properties": {
+        "poster": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "movieapiMovie": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "kpRating": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "imdbRating": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "kpId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "year": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "posterPath": {
+          "type": "string"
+        },
+        "country": {
+          "type": "string"
+        },
+        "reviewCount": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "movieapiShortMovie": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "kpRating": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "kpId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "posterPath": {
+          "type": "string"
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    }
+  }
+}

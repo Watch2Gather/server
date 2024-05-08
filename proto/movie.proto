@@ -1,0 +1,82 @@
+syntax="proto3";
+
+package watch2gather.proto.movieapi;
+
+import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+option go_package = "github.com/Watch2Gather/server/proto/gen";
+
+service MovieService {
+  rpc GetAllMovies (GetAllMoviesRequest) returns (GetAllMoviesResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/movies"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Get all movies"
+      description: "Get short info about all available movies"
+      tags: "Movie"
+    };
+  }
+  rpc GetMovie (GetMovieRequest) returns (Movie) {
+    option (google.api.http) = {
+      get: "/api/v1/movies/{id}"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Get movie"
+      description: "Get full info a movie"
+      tags: "Movie"
+    };
+  }
+  rpc GetMoviePoster (GetMoviePosterRequest) returns (GetMoviePosterResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/movies"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Get movie"
+      description: "Get full info a movie"
+      tags: "Movie"
+    };
+
+  }
+}
+
+message GetMovieRequest {
+  string id = 1;
+}
+
+message GetAllMoviesRequest {}
+
+message GetAllMoviesResponse {
+  repeated ShortMovie movie = 1;
+}
+
+message GetMoviePosterRequest {
+  string filePath = 1;
+}
+
+message GetMoviePosterResponse {
+  bytes poster = 1;
+}
+
+message ShortMovie {
+  string id = 1;
+  string title = 2;
+  int32  kpRating = 4;
+  int32  kpId = 6;
+  string posterPath = 8;
+
+}
+message Movie {
+  string id = 1;
+  string title = 2;
+  string description = 3;
+  int32  kpRating = 4;
+  int32  imdbRating = 5;
+  int32  kpId = 6;
+  int32  year = 7;
+  string posterPath = 8;
+  string country = 9;
+  int32  reviewCount = 10;
+}

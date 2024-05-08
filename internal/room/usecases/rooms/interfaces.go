@@ -13,7 +13,7 @@ type (
 		CreateRoom(context.Context, *domain.CreateRoomModel) (*domain.RoomModel, error)
 		CreateMessage(context.Context, *domain.CreateMessageModel) error
 		GetRoomsByUserID(context.Context, uuid.UUID) ([]*domain.RoomModel, error)
-		GetParticipantsByRoomID(context.Context, uuid.UUID) ([]*domain.ParticipantModel, error)
+		GetParticipantsByRoomID(context.Context, uuid.UUID) (uuid.UUIDs, error)
 		GetMessagesByRoomID(context.Context, *domain.MessagesByRoomIDModel) ([]*domain.MessageModel, error)
 		UpdateRoom(context.Context, *domain.UpdateRoomModel) (*domain.RoomModel, error)
 		DeleteRoom(context.Context, *domain.DeleteRoomModel) error
@@ -25,10 +25,11 @@ type (
 		CreateRoom(context.Context, *domain.CreateRoomModel) (*domain.RoomModel, error)
 		DeleteRoom(context.Context, uuid.UUID) error
 		LeaveRoom(context.Context, uuid.UUID) error
-		SendMessage(context.Context, *domain.MessageModel) error
+		SendMessage(context.Context, *domain.CreateMessageModel) error
 		GetRoomsByUser(context.Context) ([]*domain.RoomModel, error)
+		GetParticipantsByRoomID(context.Context, uuid.UUID) (uuid.UUIDs, error)
 		InviteToRoom(context.Context, *domain.AddParticipantsModel) (*domain.RoomModel, error)
-		EnterRoom(context.Context, uuid.UUID) (any, error)
+		EnterRoom(context.Context, uuid.UUID) ([]*domain.MessageModel, error)
 		UpdateRoom(context.Context, *domain.RoomModel) (*domain.RoomModel, error)
 	}
 )

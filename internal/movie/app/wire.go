@@ -7,10 +7,10 @@ import (
 
 	"github.com/google/wire"
 
-	"github.com/Watch2Gather/server/cmd/room/config"
-	"github.com/Watch2Gather/server/internal/room/app/router"
-	"github.com/Watch2Gather/server/internal/room/infras/repo"
-	roomsUC "github.com/Watch2Gather/server/internal/room/usecases/rooms"
+	"github.com/Watch2Gather/server/cmd/movie/config"
+	"github.com/Watch2Gather/server/internal/movie/app/router"
+	"github.com/Watch2Gather/server/internal/movie/infras/repo"
+	moviesUC "github.com/Watch2Gather/server/internal/movie/usecases/movies"
 	"github.com/Watch2Gather/server/pkg/postgres"
 )
 
@@ -23,9 +23,9 @@ func InitApp(
 		New,
 		dbEngineFunc,
 
-		router.RoomGRPCServerSet,
+		router.MovieGRPCServerSet,
 		repo.RepositorySet,
-		roomsUC.UseCaseSet,
+		moviesUC.UseCaseSet,
 	))
 }
 

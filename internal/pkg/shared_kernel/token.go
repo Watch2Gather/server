@@ -129,6 +129,9 @@ func TokenInterceptor(ctx context.Context, req any, info *grpc.UnaryServerInfo, 
 	if info.FullMethod == gen.UserService_LoginUser_FullMethodName {
 		return handler(ctx, req)
 	}
+	if info.FullMethod == gen.MovieService_GetAllMovies_FullMethodName {
+		return handler(ctx, req)
+	}
 	if info.FullMethod == gen.UserService_RegisterUser_FullMethodName {
 		return handler(ctx, req)
 	}

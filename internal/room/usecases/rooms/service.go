@@ -2,6 +2,7 @@ package rooms
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/google/uuid"
 	"github.com/google/wire"
@@ -16,6 +17,7 @@ import (
 type usecase struct {
 	roomRepo RoomRepo
 }
+
 
 var _ UseCase = (*usecase)(nil)
 
@@ -61,8 +63,19 @@ func (usecase) LeaveRoom(ctx context.Context, _ uuid.UUID) error {
 	panic("not implemented") // TODO: Implement
 }
 
-func (usecase) SendMessage(ctx context.Context, model *domain.MessageModel) error {
-	panic("not implemented") // TODO: Implement
+func (u *usecase) SendMessage(ctx context.Context, model *domain.CreateMessageModel) error {
+	id, err := sharedkernel.GetUserIDFromContext(ctx)
+	if err != nil {
+		return errors.Wrap(err, "sharedkernel.GetUserIDFromContext")
+	}
+
+	model.UserID = id
+
+	err = u.roomRepo.CreateMessage(ctx, model)
+	if err != nil {
+		return errors.Wrap(err, "roomRepo.CreateMessage")
+	}
+	return nil
 }
 
 func (u *usecase) GetRoomsByUser(ctx context.Context) ([]*domain.RoomModel, error) {
@@ -76,16 +89,34 @@ func (u *usecase) GetRoomsByUser(ctx context.Context) ([]*domain.RoomModel, erro
 		return nil, errors.Wrap(err, "roomRepo.GetRoomsByUserID")
 	}
 
-
 	return rooms, nil
 }
+
+func (u *usecase) GetParticipantsByRoomID(ctx context.Context, id uuid.UUID) (uuid.UUIDs, error) {
+	participants, err := u.roomRepo.GetParticipantsByRoomID(ctx, id)
+	if err != nil {
+		return nil, errors.Wrap(err, "roomRepo.GetRoomsByUserID")
+	}
+
+	return participants, nil
+}
+
 
 func (usecase) InviteToRoom(ctx context.Context, model *domain.AddParticipantsModel) (*domain.RoomModel, error) {
 	panic("not implemented") // TODO: Implement
 }
 
-func (usecase) EnterRoom(ctx context.Context, id uuid.UUID) (any, error) {
-	panic("not implemented") // TODO: Implement
+func (u *usecase) EnterRoom(ctx context.Context, id uuid.UUID) ([]*domain.MessageModel, error) {
+	messages, err := u.roomRepo.GetMessagesByRoomID(ctx, &domain.MessagesByRoomIDModel{
+		RoomID: id,
+		Limit:  100,
+		Offset: 0,
+	})
+	slog.Debug("Getting Messages in usecase", "messages", messages)
+	if err != nil {
+		return nil, errors.Wrap(err, "roomRepo.CreateMessage")
+	}
+	return messages, nil
 }
 
 func (usecase) UpdateRoom(ctx context.Context, model *domain.RoomModel) (*domain.RoomModel, error) {

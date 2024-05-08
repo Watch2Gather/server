@@ -13,8 +13,7 @@ CREATE TABLE
     imdb_rating   numeric,
     kp_id         integer,
     year          integer  NOT NULL,
-    preview       text,
-    file_name     text     NOT NULL,
+    poster_path   text     NOT NULL,
     country       text     NOT NULL,
     review_count  integer,
 
