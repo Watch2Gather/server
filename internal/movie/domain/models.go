@@ -20,4 +20,3 @@ type MovieModel struct {
 	ReviewCount int
 }
 
-type Poster []byte

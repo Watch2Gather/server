@@ -42,11 +42,11 @@ INSERT INTO "app".messages (
 RETURNING *;
 
 -- name: GetMessagesByRoomId :many
-SELECT * FROM "app".messages
-  WHERE room_id = $1
-  ORDER BY created_at DESC
-  LIMIT $2
-  OFFSET $3;
+SELECT m.id AS m_id, m.content, m.created_at, u.id AS u_id, u.username, u.avatar  FROM "app".messages AS m
+  JOIN "app".users AS u
+    ON m.user_id = u.id
+   	WHERE m.room_id = $1
+   	ORDER BY m.created_at ASC;
 
 -- name: AddParticipant :exec
 INSERT INTO "app".participants (

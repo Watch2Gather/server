@@ -10,14 +10,13 @@ import (
 
 type (
 	MovieRepo interface {
-	GetAllMovies(context.Context) ([]*domain.ShortMovieModel, error)
-	GetMovieInfo(context.Context, uuid.UUID) (*domain.MovieModel, error)
-	GetMoviePosterPath(context.Context, string) (*domain.Poster, error)
-	GetMoviePosterPicture(context.Context, string)
+		GetAllMovies(context.Context) ([]*domain.ShortMovieModel, error)
+		GetMovieInfo(context.Context, uuid.UUID) (*domain.MovieModel, error)
+		GetMoviePosterPath(context.Context, string) (string, error)
 	}
 	UseCase interface {
-	GetAllMovies(context.Context) ([]*domain.ShortMovieModel, error)
-	GetMovieInfo(context.Context, uuid.UUID) (*domain.MovieModel, error)
-	GetMoviePoster(context.Context, string) (*domain.Poster, error)
+		GetAllMovies(context.Context) ([]*domain.ShortMovieModel, error)
+		GetMovieInfo(context.Context, uuid.UUID) (*domain.MovieModel, error)
+		GetMoviePoster(context.Context, string) (*[]byte, error)
 	}
 )

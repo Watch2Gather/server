@@ -11,6 +11,7 @@ import (
 
 	"github.com/golang/glog"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/tmc/grpc-websocket-proxy/wsproxy"
 	_ "google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -113,7 +114,8 @@ func main() {
 
 	s := &http.Server{
 		Addr:    fmt.Sprintf("%s:%d", cfg.Host, cfg.Port),
-		Handler: allowCORS(withLogger(mux)),
+		Handler: allowCORS(withLogger(wsproxy.WebsocketProxy(mux))),
+		// Handler: allowCORS(withLogger(mux)),
 	}
 
 	go func() {

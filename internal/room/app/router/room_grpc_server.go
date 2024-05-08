@@ -24,7 +24,6 @@ type roomGRPCServer struct {
 	uc  rooms.UseCase
 }
 
-
 var _ gen.RoomServiceServer = (*roomGRPCServer)(nil)
 
 var RoomGRPCServerSet = wire.NewSet(NewGRPCRoomServer)
@@ -107,6 +106,7 @@ func (g *roomGRPCServer) GetRoomsByUser(ctx context.Context, req *gen.GetRoomsBy
 
 	for _, room := range rooms {
 		res.Rooms = append(res.Rooms, &gen.Room{
+			Id:                room.ID.String(),
 			OwnerId:           room.OwnerID.String(),
 			ParticipantsCount: int32(room.ParticipantsCount),
 			FilmTitle:         "",
@@ -171,17 +171,27 @@ func (g *roomGRPCServer) EnterRoom(req *gen.EnterRoomRequest, srv gen.RoomServic
 	roomMessages[roomID] = append(roomMessages[roomID], roomChan)
 
 	messages, err := g.uc.EnterRoom(ctx, roomID)
-	slog.Debug("Getting Messages", "messages", messages)
+	// slog.Debug("Getting Messages", "messages", messages)
 	if err != nil {
 		slog.Error("Caught error", "trace", errors.Wrap(err, "uc.CreateRoom"))
 		return sharedkernel.ErrServer
 	}
 
+	if len(messages) == 0 {
+		slog.Debug("Empty messages")
+		srv.Send(nil)
+	}
+
 	for _, message := range messages {
 		srv.Send(&gen.Message{
-			SenderId: message.UserID.String(),
-			RoomId:   message.RoomID.String(),
-			Text:     message.Content,
+			Id:        message.ID.String(),
+			Text:      message.Text,
+			CreatedAt: message.CreatedAt,
+			User: &gen.Sender{
+				Id:     message.User.ID.String(),
+				Name:   message.User.Name,
+				Avatar: message.User.Avatar,
+			},
 		})
 	}
 
@@ -190,7 +200,7 @@ func (g *roomGRPCServer) EnterRoom(req *gen.EnterRoomRequest, srv gen.RoomServic
 		for {
 			select {
 			case message = <-roomChan:
-				slog.Debug("received Messsage", "message", message)
+				// slog.Debug("received Messsage", "message", message)
 				srv.Send(message)
 			case <-done:
 				return
@@ -211,7 +221,7 @@ func (roomGRPCServer) DeleteRoom(_ context.Context, _ *gen.DeleteRoomRequest) (_
 	panic("not implemented") // TODO: Implement
 }
 
-func (g *roomGRPCServer) SendMessage(ctx context.Context, req *gen.Message) (*gen.SendMessageResponse, error) {
+func (g *roomGRPCServer) SendMessage(ctx context.Context, req *gen.SendMessageRequest) (*gen.SendMessageResponse, error) {
 	slog.Info("POST: SendMessage")
 
 	id, err := uuid.Parse(req.GetRoomId())
@@ -230,7 +240,10 @@ func (g *roomGRPCServer) SendMessage(ctx context.Context, req *gen.Message) (*ge
 
 	go func() {
 		for _, rChan := range roomMessages[id] {
-			rChan <- req
+			rChan <- &gen.Message{
+				Id:  req.RoomId,
+				Text: req.Text,
+			}
 		}
 	}()
 

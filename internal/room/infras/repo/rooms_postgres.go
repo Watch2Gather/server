@@ -133,7 +133,7 @@ func (r *roomRepo) GetRoomsByUserID(ctx context.Context, id uuid.UUID) (_ []*dom
 	return roomsModel, nil
 }
 
-func (r *roomRepo) GetParticipantsByRoomID(ctx context.Context, id uuid.UUID) (uuid.UUIDs,error) {
+func (r *roomRepo) GetParticipantsByRoomID(ctx context.Context, id uuid.UUID) (uuid.UUIDs, error) {
 	querier := postgresql.New(r.pg.GetDB())
 
 	participants, err := querier.GetParticipantsByRoomId(ctx, id)
@@ -146,18 +146,13 @@ func (r *roomRepo) GetParticipantsByRoomID(ctx context.Context, id uuid.UUID) (u
 		ids = append(ids, parparticipant.ID)
 	}
 
-
 	return ids, nil
 }
 
-func (r *roomRepo) GetMessagesByRoomID(ctx context.Context, model *domain.MessagesByRoomIDModel) ([]*domain.MessageModel, error) {
+func (r *roomRepo) GetMessagesByRoomID(ctx context.Context, id uuid.UUID) ([]*domain.MessageModel, error) {
 	querier := postgresql.New(r.pg.GetDB())
 
-	messages, err := querier.GetMessagesByRoomId(ctx, postgresql.GetMessagesByRoomIdParams{
-		RoomID: model.RoomID,
-		Limit:  int32(model.Limit),
-		Offset: int32(model.Offset),
-	})
+	messages, err := querier.GetMessagesByRoomId(ctx, id)
 	if err != nil {
 		return nil, errors.Wrap(err, "querier.GetMessagesByRoomID")
 	}
@@ -166,11 +161,14 @@ func (r *roomRepo) GetMessagesByRoomID(ctx context.Context, model *domain.Messag
 
 	for _, message := range messages {
 		messagesModel = append(messagesModel, &domain.MessageModel{
-			Content:   message.Content,
-			CreatedAt: int(message.CreatedAt.UnixNano()),
-			UserID:    message.UserID,
-			RoomID:    message.RoomID,
-			MessageID: message.ID,
+			Text: message.Content,
+			User: domain.User{
+				Name:   message.Username,
+				Avatar: message.Avatar.String,
+				ID:     message.UID,
+			},
+			CreatedAt: message.CreatedAt.Unix(),
+			ID:        message.MID,
 		})
 	}
 

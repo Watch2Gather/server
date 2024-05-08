@@ -19,14 +19,15 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	RoomService_CreateRoom_FullMethodName       = "/watch2gather.proto.roomapi.RoomService/CreateRoom"
-	RoomService_GetRoomsByUser_FullMethodName   = "/watch2gather.proto.roomapi.RoomService/GetRoomsByUser"
-	RoomService_GetUserIDsByRoom_FullMethodName = "/watch2gather.proto.roomapi.RoomService/GetUserIDsByRoom"
-	RoomService_InviteToRoom_FullMethodName     = "/watch2gather.proto.roomapi.RoomService/InviteToRoom"
-	RoomService_EnterRoom_FullMethodName        = "/watch2gather.proto.roomapi.RoomService/EnterRoom"
-	RoomService_SendMessage_FullMethodName      = "/watch2gather.proto.roomapi.RoomService/SendMessage"
-	RoomService_UpdateRoom_FullMethodName       = "/watch2gather.proto.roomapi.RoomService/UpdateRoom"
-	RoomService_DeleteRoom_FullMethodName       = "/watch2gather.proto.roomapi.RoomService/DeleteRoom"
+	RoomService_CreateRoom_FullMethodName        = "/watch2gather.proto.roomapi.RoomService/CreateRoom"
+	RoomService_GetRoomsByUser_FullMethodName    = "/watch2gather.proto.roomapi.RoomService/GetRoomsByUser"
+	RoomService_GetUserIDsByRoom_FullMethodName  = "/watch2gather.proto.roomapi.RoomService/GetUserIDsByRoom"
+	RoomService_InviteToRoom_FullMethodName      = "/watch2gather.proto.roomapi.RoomService/InviteToRoom"
+	RoomService_GetMessagesByRoom_FullMethodName = "/watch2gather.proto.roomapi.RoomService/GetMessagesByRoom"
+	RoomService_EnterRoom_FullMethodName         = "/watch2gather.proto.roomapi.RoomService/EnterRoom"
+	RoomService_SendMessage_FullMethodName       = "/watch2gather.proto.roomapi.RoomService/SendMessage"
+	RoomService_UpdateRoom_FullMethodName        = "/watch2gather.proto.roomapi.RoomService/UpdateRoom"
+	RoomService_DeleteRoom_FullMethodName        = "/watch2gather.proto.roomapi.RoomService/DeleteRoom"
 )
 
 // RoomServiceClient is the client API for RoomService service.
@@ -37,8 +38,9 @@ type RoomServiceClient interface {
 	GetRoomsByUser(ctx context.Context, in *GetRoomsByUserRequest, opts ...grpc.CallOption) (*GetRoomsByUserResponse, error)
 	GetUserIDsByRoom(ctx context.Context, in *GetUserIDsByRoomRequest, opts ...grpc.CallOption) (*GetUserIDsByRoomResponse, error)
 	InviteToRoom(ctx context.Context, in *InviteToRoomRequest, opts ...grpc.CallOption) (*InviteToRoomResponse, error)
+	GetMessagesByRoom(ctx context.Context, in *GetMessagesByRoomRequest, opts ...grpc.CallOption) (*GetMessagesByRoomResponse, error)
 	EnterRoom(ctx context.Context, in *EnterRoomRequest, opts ...grpc.CallOption) (RoomService_EnterRoomClient, error)
-	SendMessage(ctx context.Context, in *Message, opts ...grpc.CallOption) (*SendMessageResponse, error)
+	SendMessage(ctx context.Context, in *SendMessageRequest, opts ...grpc.CallOption) (*SendMessageResponse, error)
 	UpdateRoom(ctx context.Context, in *UpdateRoomRequest, opts ...grpc.CallOption) (*UpdateRoomResponse, error)
 	DeleteRoom(ctx context.Context, in *DeleteRoomRequest, opts ...grpc.CallOption) (*DeleteRoomResponse, error)
 }
@@ -87,6 +89,15 @@ func (c *roomServiceClient) InviteToRoom(ctx context.Context, in *InviteToRoomRe
 	return out, nil
 }
 
+func (c *roomServiceClient) GetMessagesByRoom(ctx context.Context, in *GetMessagesByRoomRequest, opts ...grpc.CallOption) (*GetMessagesByRoomResponse, error) {
+	out := new(GetMessagesByRoomResponse)
+	err := c.cc.Invoke(ctx, RoomService_GetMessagesByRoom_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *roomServiceClient) EnterRoom(ctx context.Context, in *EnterRoomRequest, opts ...grpc.CallOption) (RoomService_EnterRoomClient, error) {
 	stream, err := c.cc.NewStream(ctx, &RoomService_ServiceDesc.Streams[0], RoomService_EnterRoom_FullMethodName, opts...)
 	if err != nil {
@@ -119,7 +130,7 @@ func (x *roomServiceEnterRoomClient) Recv() (*Message, error) {
 	return m, nil
 }
 
-func (c *roomServiceClient) SendMessage(ctx context.Context, in *Message, opts ...grpc.CallOption) (*SendMessageResponse, error) {
+func (c *roomServiceClient) SendMessage(ctx context.Context, in *SendMessageRequest, opts ...grpc.CallOption) (*SendMessageResponse, error) {
 	out := new(SendMessageResponse)
 	err := c.cc.Invoke(ctx, RoomService_SendMessage_FullMethodName, in, out, opts...)
 	if err != nil {
@@ -154,8 +165,9 @@ type RoomServiceServer interface {
 	GetRoomsByUser(context.Context, *GetRoomsByUserRequest) (*GetRoomsByUserResponse, error)
 	GetUserIDsByRoom(context.Context, *GetUserIDsByRoomRequest) (*GetUserIDsByRoomResponse, error)
 	InviteToRoom(context.Context, *InviteToRoomRequest) (*InviteToRoomResponse, error)
+	GetMessagesByRoom(context.Context, *GetMessagesByRoomRequest) (*GetMessagesByRoomResponse, error)
 	EnterRoom(*EnterRoomRequest, RoomService_EnterRoomServer) error
-	SendMessage(context.Context, *Message) (*SendMessageResponse, error)
+	SendMessage(context.Context, *SendMessageRequest) (*SendMessageResponse, error)
 	UpdateRoom(context.Context, *UpdateRoomRequest) (*UpdateRoomResponse, error)
 	DeleteRoom(context.Context, *DeleteRoomRequest) (*DeleteRoomResponse, error)
 }
@@ -176,10 +188,13 @@ func (UnimplementedRoomServiceServer) GetUserIDsByRoom(context.Context, *GetUser
 func (UnimplementedRoomServiceServer) InviteToRoom(context.Context, *InviteToRoomRequest) (*InviteToRoomResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method InviteToRoom not implemented")
 }
+func (UnimplementedRoomServiceServer) GetMessagesByRoom(context.Context, *GetMessagesByRoomRequest) (*GetMessagesByRoomResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetMessagesByRoom not implemented")
+}
 func (UnimplementedRoomServiceServer) EnterRoom(*EnterRoomRequest, RoomService_EnterRoomServer) error {
 	return status.Errorf(codes.Unimplemented, "method EnterRoom not implemented")
 }
-func (UnimplementedRoomServiceServer) SendMessage(context.Context, *Message) (*SendMessageResponse, error) {
+func (UnimplementedRoomServiceServer) SendMessage(context.Context, *SendMessageRequest) (*SendMessageResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendMessage not implemented")
 }
 func (UnimplementedRoomServiceServer) UpdateRoom(context.Context, *UpdateRoomRequest) (*UpdateRoomResponse, error) {
@@ -272,6 +287,24 @@ func _RoomService_InviteToRoom_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RoomService_GetMessagesByRoom_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetMessagesByRoomRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RoomServiceServer).GetMessagesByRoom(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RoomService_GetMessagesByRoom_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RoomServiceServer).GetMessagesByRoom(ctx, req.(*GetMessagesByRoomRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _RoomService_EnterRoom_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(EnterRoomRequest)
 	if err := stream.RecvMsg(m); err != nil {
@@ -294,7 +327,7 @@ func (x *roomServiceEnterRoomServer) Send(m *Message) error {
 }
 
 func _RoomService_SendMessage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Message)
+	in := new(SendMessageRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -306,7 +339,7 @@ func _RoomService_SendMessage_Handler(srv interface{}, ctx context.Context, dec 
 		FullMethod: RoomService_SendMessage_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RoomServiceServer).SendMessage(ctx, req.(*Message))
+		return srv.(RoomServiceServer).SendMessage(ctx, req.(*SendMessageRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -369,6 +402,10 @@ var RoomService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "InviteToRoom",
 			Handler:    _RoomService_InviteToRoom_Handler,
+		},
+		{
+			MethodName: "GetMessagesByRoom",
+			Handler:    _RoomService_GetMessagesByRoom_Handler,
 		},
 		{
 			MethodName: "SendMessage",

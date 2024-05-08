@@ -187,6 +187,58 @@ func local_request_RoomService_InviteToRoom_0(ctx context.Context, marshaler run
 
 }
 
+func request_RoomService_GetMessagesByRoom_0(ctx context.Context, marshaler runtime.Marshaler, client RoomServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq GetMessagesByRoomRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["roomId"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "roomId")
+	}
+
+	protoReq.RoomId, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "roomId", err)
+	}
+
+	msg, err := client.GetMessagesByRoom(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_RoomService_GetMessagesByRoom_0(ctx context.Context, marshaler runtime.Marshaler, server RoomServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq GetMessagesByRoomRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["roomId"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "roomId")
+	}
+
+	protoReq.RoomId, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "roomId", err)
+	}
+
+	msg, err := server.GetMessagesByRoom(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
 func request_RoomService_EnterRoom_0(ctx context.Context, marshaler runtime.Marshaler, client RoomServiceClient, req *http.Request, pathParams map[string]string) (RoomService_EnterRoomClient, runtime.ServerMetadata, error) {
 	var protoReq EnterRoomRequest
 	var metadata runtime.ServerMetadata
@@ -222,7 +274,7 @@ func request_RoomService_EnterRoom_0(ctx context.Context, marshaler runtime.Mars
 }
 
 func request_RoomService_SendMessage_0(ctx context.Context, marshaler runtime.Marshaler, client RoomServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq Message
+	var protoReq SendMessageRequest
 	var metadata runtime.ServerMetadata
 
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
@@ -252,7 +304,7 @@ func request_RoomService_SendMessage_0(ctx context.Context, marshaler runtime.Ma
 }
 
 func local_request_RoomService_SendMessage_0(ctx context.Context, marshaler runtime.Marshaler, server RoomServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq Message
+	var protoReq SendMessageRequest
 	var metadata runtime.ServerMetadata
 
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
@@ -499,6 +551,31 @@ func RegisterRoomServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux
 
 	})
 
+	mux.Handle("GET", pattern_RoomService_GetMessagesByRoom_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		var err error
+		var annotatedContext context.Context
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/watch2gather.proto.roomapi.RoomService/GetMessagesByRoom", runtime.WithHTTPPathPattern("/api/v1/rooms/{roomId}/messages"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_RoomService_GetMessagesByRoom_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_RoomService_GetMessagesByRoom_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("GET", pattern_RoomService_EnterRoom_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
 		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
@@ -710,13 +787,35 @@ func RegisterRoomServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux
 
 	})
 
+	mux.Handle("GET", pattern_RoomService_GetMessagesByRoom_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		var err error
+		var annotatedContext context.Context
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/watch2gather.proto.roomapi.RoomService/GetMessagesByRoom", runtime.WithHTTPPathPattern("/api/v1/rooms/{roomId}/messages"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_RoomService_GetMessagesByRoom_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_RoomService_GetMessagesByRoom_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("GET", pattern_RoomService_EnterRoom_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/watch2gather.proto.roomapi.RoomService/EnterRoom", runtime.WithHTTPPathPattern("/api/v1/rooms/{roomId}/messages"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/watch2gather.proto.roomapi.RoomService/EnterRoom", runtime.WithHTTPPathPattern("/api/v1/rooms/{roomId}/stream"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -810,7 +909,9 @@ var (
 
 	pattern_RoomService_InviteToRoom_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "rooms", "roomId", "invite"}, ""))
 
-	pattern_RoomService_EnterRoom_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "rooms", "roomId", "messages"}, ""))
+	pattern_RoomService_GetMessagesByRoom_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "rooms", "roomId", "messages"}, ""))
+
+	pattern_RoomService_EnterRoom_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "rooms", "roomId", "stream"}, ""))
 
 	pattern_RoomService_SendMessage_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "rooms", "roomId", "messages"}, ""))
 
@@ -827,6 +928,8 @@ var (
 	forward_RoomService_GetUserIDsByRoom_0 = runtime.ForwardResponseMessage
 
 	forward_RoomService_InviteToRoom_0 = runtime.ForwardResponseMessage
+
+	forward_RoomService_GetMessagesByRoom_0 = runtime.ForwardResponseMessage
 
 	forward_RoomService_EnterRoom_0 = runtime.ForwardResponseStream
 

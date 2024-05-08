@@ -2,7 +2,6 @@ package rooms
 
 import (
 	"context"
-	"log/slog"
 
 	"github.com/google/uuid"
 	"github.com/google/wire"
@@ -107,12 +106,8 @@ func (usecase) InviteToRoom(ctx context.Context, model *domain.AddParticipantsMo
 }
 
 func (u *usecase) EnterRoom(ctx context.Context, id uuid.UUID) ([]*domain.MessageModel, error) {
-	messages, err := u.roomRepo.GetMessagesByRoomID(ctx, &domain.MessagesByRoomIDModel{
-		RoomID: id,
-		Limit:  100,
-		Offset: 0,
-	})
-	slog.Debug("Getting Messages in usecase", "messages", messages)
+	messages, err := u.roomRepo.GetMessagesByRoomID(ctx, id)
+
 	if err != nil {
 		return nil, errors.Wrap(err, "roomRepo.CreateMessage")
 	}

@@ -49,7 +49,7 @@ message GetMovieRequest {
 message GetAllMoviesRequest {}
 
 message GetAllMoviesResponse {
-  repeated ShortMovie movie = 1;
+  repeated ShortMovie movies = 1;
 }
 
 message GetMoviePosterRequest {

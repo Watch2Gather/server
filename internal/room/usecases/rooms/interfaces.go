@@ -14,7 +14,7 @@ type (
 		CreateMessage(context.Context, *domain.CreateMessageModel) error
 		GetRoomsByUserID(context.Context, uuid.UUID) ([]*domain.RoomModel, error)
 		GetParticipantsByRoomID(context.Context, uuid.UUID) (uuid.UUIDs, error)
-		GetMessagesByRoomID(context.Context, *domain.MessagesByRoomIDModel) ([]*domain.MessageModel, error)
+		GetMessagesByRoomID(context.Context, uuid.UUID) ([]*domain.MessageModel, error)
 		UpdateRoom(context.Context, *domain.UpdateRoomModel) (*domain.RoomModel, error)
 		DeleteRoom(context.Context, *domain.DeleteRoomModel) error
 		AddParticipants(context.Context, *domain.AddParticipantsModel) error

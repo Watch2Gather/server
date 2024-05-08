@@ -184,23 +184,14 @@
     },
     "/api/v1/rooms/{roomId}/messages": {
       "get": {
-        "summary": "Enter room",
-        "description": "Enter a room and receive messages",
-        "operationId": "RoomService_EnterRoom",
+        "summary": "Get previous messages",
+        "description": "Get previous messages in a room",
+        "operationId": "RoomService_GetMessagesByRoom",
         "responses": {
           "200": {
-            "description": "A successful response.(streaming responses)",
+            "description": "A successful response.",
             "schema": {
-              "type": "object",
-              "properties": {
-                "result": {
-                  "$ref": "#/definitions/roomapiMessage"
-                },
-                "error": {
-                  "$ref": "#/definitions/rpcStatus"
-                }
-              },
-              "title": "Stream result of roomapiMessage"
+              "$ref": "#/definitions/roomapiGetMessagesByRoomResponse"
             }
           },
           "default": {
@@ -261,6 +252,47 @@
         ]
       }
     },
+    "/api/v1/rooms/{roomId}/stream": {
+      "get": {
+        "summary": "Get message stream",
+        "description": "Enter a room and receive messages",
+        "operationId": "RoomService_EnterRoom",
+        "responses": {
+          "200": {
+            "description": "A successful response.(streaming responses)",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "$ref": "#/definitions/roomapiMessage"
+                },
+                "error": {
+                  "$ref": "#/definitions/rpcStatus"
+                }
+              },
+              "title": "Stream result of roomapiMessage"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "roomId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Room"
+        ]
+      }
+    },
     "/api/v1/rooms/{roomId}/users": {
       "get": {
         "summary": "Get users by room id",
@@ -309,9 +341,6 @@
     "RoomServiceSendMessageBody": {
       "type": "object",
       "properties": {
-        "senderId": {
-          "type": "string"
-        },
         "text": {
           "type": "string"
         }
@@ -365,6 +394,18 @@
     "roomapiDeleteRoomResponse": {
       "type": "object"
     },
+    "roomapiGetMessagesByRoomResponse": {
+      "type": "object",
+      "properties": {
+        "messages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/roomapiMessage"
+          }
+        }
+      }
+    },
     "roomapiGetRoomsByUserResponse": {
       "type": "object",
       "properties": {
@@ -394,14 +435,18 @@
     "roomapiMessage": {
       "type": "object",
       "properties": {
-        "senderId": {
-          "type": "string"
-        },
-        "roomId": {
+        "id": {
           "type": "string"
         },
         "text": {
           "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "int64"
+        },
+        "user": {
+          "$ref": "#/definitions/roomapiSender"
         }
       }
     },
@@ -412,6 +457,9 @@
           "type": "string"
         },
         "ownerId": {
+          "type": "string"
+        },
+        "id": {
           "type": "string"
         },
         "participantsCount": {
@@ -428,6 +476,20 @@
     },
     "roomapiSendMessageResponse": {
       "type": "object"
+    },
+    "roomapiSender": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "avatar": {
+          "type": "string"
+        }
+      }
     },
     "roomapiUpdateRoomResponse": {
       "type": "object"

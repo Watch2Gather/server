@@ -50,9 +50,19 @@ service RoomService {
       tags: "Room"
     };
   }
-  rpc EnterRoom(EnterRoomRequest) returns (stream Message) {
+  rpc GetMessagesByRoom(GetMessagesByRoomRequest) returns (GetMessagesByRoomResponse) {
     option (google.api.http) = {
       get: "/api/v1/rooms/{roomId}/messages"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Get previous messages"
+      description: "Get previous messages in a room"
+      tags: "Room"
+    };
+  }
+  rpc EnterRoom(EnterRoomRequest) returns (stream Message) {
+    option (google.api.http) = {
+      get: "/api/v1/rooms/{roomId}/stream"
     };
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       summary: "Get message stream"
@@ -60,7 +70,7 @@ service RoomService {
       tags: "Room"
     };
   }
-  rpc SendMessage (Message) returns (SendMessageResponse) {
+  rpc SendMessage (SendMessageRequest) returns (SendMessageResponse) {
     option (google.api.http) = {
       post: "/api/v1/rooms/{roomId}/messages"
       body: "*"
@@ -150,17 +160,38 @@ message UpdateRoomRequest {
 message UpdateRoomResponse {
 }
 
+message SendMessageRequest {
+  string roomId = 1;
+  string text = 2;
+}
+
+message GetMessagesByRoomRequest {
+  string roomId = 1;
+}
+
+message GetMessagesByRoomResponse {
+  repeated Message messages = 1;
+}
+
 message Message {
-  string senderId = 1;
-  string roomId = 2;
-  string text = 3;
+  string id = 1;
+  string text = 2;
+  int64  createdAt = 3;
+  Sender user = 4;
 }
 
 message Room {
   string name = 1;
   string ownerId = 2;
-  int32  participantsCount = 3;
-  string filmTitle = 4;
-  string filmPoster = 5;
+  string id = 3;
+  int32  participantsCount = 4;
+  string filmTitle = 5;
+  string filmPoster = 6;
+}
+
+message Sender {
+  string id = 1;
+  string name = 2;
+  string avatar = 3;
 }
 

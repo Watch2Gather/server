@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/google/wire"
+	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
@@ -52,7 +53,7 @@ func (g *movieGRPCServer) GetAllMovies(ctx context.Context, req *gen.GetAllMovie
 	// _ = movies
 
 	res := &gen.GetAllMoviesResponse{
-		Movie: []*gen.ShortMovie{
+		Movies: []*gen.ShortMovie{
 			{
 				Title:      "Lord of the Rings 1",
 				Id:         uuid.New().String(),
@@ -134,6 +135,18 @@ func (g *movieGRPCServer) GetMovie(ctx context.Context, req *gen.GetMovieRequest
 	return res, nil
 }
 
-func (g *movieGRPCServer) GetMoviePoster(_ context.Context, _ *gen.GetMoviePosterRequest) (_ *gen.GetMoviePosterResponse, _ error) {
-	panic("not implemented") // TODO: Implement
+func (g *movieGRPCServer) GetMoviePoster(ctx context.Context, req *gen.GetMoviePosterRequest) (*gen.GetMoviePosterResponse, error) {
+	slog.Info("GET: GetMoviePoster")
+
+	poster, err := g.uc.GetMoviePoster(ctx, req.GetFilePath())
+	if err != nil {
+		slog.Error("Caught error", "trace", errors.Wrap(err, "uc.GetMoviePoster"))
+		return nil, nil
+	}
+
+	res := &gen.GetMoviePosterResponse{
+		Poster: *poster,
+	}
+
+	return res, nil
 }

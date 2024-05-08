@@ -8,6 +8,7 @@ package postgresql
 import (
 	"context"
 	"database/sql"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -101,34 +102,38 @@ func (q *Queries) DeleteRoom(ctx context.Context, arg DeleteRoomParams) error {
 }
 
 const getMessagesByRoomId = `-- name: GetMessagesByRoomId :many
-SELECT id, room_id, user_id, content, created_at FROM "app".messages
-  WHERE room_id = $1
-  ORDER BY created_at DESC
-  LIMIT $2
-  OFFSET $3
+SELECT m.id AS m_id, m.content, m.created_at, u.id AS u_id, u.username, u.avatar  FROM "app".messages AS m
+  JOIN "app".users AS u
+    ON m.user_id = u.id
+   	WHERE m.room_id = $1
+   	ORDER BY m.created_at ASC
 `
 
-type GetMessagesByRoomIdParams struct {
-	RoomID uuid.UUID `json:"room_id"`
-	Limit  int32     `json:"limit"`
-	Offset int32     `json:"offset"`
+type GetMessagesByRoomIdRow struct {
+	MID       uuid.UUID      `json:"m_id"`
+	Content   string         `json:"content"`
+	CreatedAt time.Time      `json:"created_at"`
+	UID       uuid.UUID      `json:"u_id"`
+	Username  string         `json:"username"`
+	Avatar    sql.NullString `json:"avatar"`
 }
 
-func (q *Queries) GetMessagesByRoomId(ctx context.Context, arg GetMessagesByRoomIdParams) ([]AppMessage, error) {
-	rows, err := q.db.QueryContext(ctx, getMessagesByRoomId, arg.RoomID, arg.Limit, arg.Offset)
+func (q *Queries) GetMessagesByRoomId(ctx context.Context, roomID uuid.UUID) ([]GetMessagesByRoomIdRow, error) {
+	rows, err := q.db.QueryContext(ctx, getMessagesByRoomId, roomID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []AppMessage
+	var items []GetMessagesByRoomIdRow
 	for rows.Next() {
-		var i AppMessage
+		var i GetMessagesByRoomIdRow
 		if err := rows.Scan(
-			&i.ID,
-			&i.RoomID,
-			&i.UserID,
+			&i.MID,
 			&i.Content,
 			&i.CreatedAt,
+			&i.UID,
+			&i.Username,
+			&i.Avatar,
 		); err != nil {
 			return nil, err
 		}
