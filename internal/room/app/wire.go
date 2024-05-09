@@ -9,6 +9,7 @@ import (
 
 	"github.com/Watch2Gather/server/cmd/room/config"
 	"github.com/Watch2Gather/server/internal/room/app/router"
+	infrasGRPC "github.com/Watch2Gather/server/internal/room/infras/grpc"
 	"github.com/Watch2Gather/server/internal/room/infras/repo"
 	roomsUC "github.com/Watch2Gather/server/internal/room/usecases/rooms"
 	"github.com/Watch2Gather/server/pkg/postgres"
@@ -26,6 +27,7 @@ func InitApp(
 		router.RoomGRPCServerSet,
 		repo.RepositorySet,
 		roomsUC.UseCaseSet,
+		infrasGRPC.UserInfoGRPCClientSet,
 	))
 }
 

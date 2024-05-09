@@ -37,16 +37,19 @@ func newGateway(
 
 	err = gen.RegisterUserServiceHandlerFromEndpoint(ctx, mux, userEndpoint, dialOpts)
 	if err != nil {
+		slog.Error("User service", "error", err)
 		return nil, err
 	}
 
 	err = gen.RegisterRoomServiceHandlerFromEndpoint(ctx, mux, roomEndpoint, dialOpts)
 	if err != nil {
+		slog.Error("Room service", "error", err)
 		return nil, err
 	}
 
 	err = gen.RegisterMovieServiceHandlerFromEndpoint(ctx, mux, movieEndpoint, dialOpts)
 	if err != nil {
+		slog.Error("Movie service", "error", err)
 		return nil, err
 	}
 

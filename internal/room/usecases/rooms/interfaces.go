@@ -11,7 +11,7 @@ import (
 type (
 	RoomRepo interface {
 		CreateRoom(context.Context, *domain.CreateRoomModel) (*domain.RoomModel, error)
-		CreateMessage(context.Context, *domain.CreateMessageModel) error
+		CreateMessage(context.Context, *domain.CreateMessageModel) (*domain.SendMessageModel, error)
 		GetRoomsByUserID(context.Context, uuid.UUID) ([]*domain.RoomModel, error)
 		GetParticipantsByRoomID(context.Context, uuid.UUID) (uuid.UUIDs, error)
 		GetMessagesByRoomID(context.Context, uuid.UUID) ([]*domain.MessageModel, error)
@@ -25,11 +25,12 @@ type (
 		CreateRoom(context.Context, *domain.CreateRoomModel) (*domain.RoomModel, error)
 		DeleteRoom(context.Context, uuid.UUID) error
 		LeaveRoom(context.Context, uuid.UUID) error
-		SendMessage(context.Context, *domain.CreateMessageModel) error
+		SendMessage(context.Context, *domain.CreateMessageModel) (*domain.SendMessageModel, error)
 		GetRoomsByUser(context.Context) ([]*domain.RoomModel, error)
 		GetParticipantsByRoomID(context.Context, uuid.UUID) (uuid.UUIDs, error)
 		InviteToRoom(context.Context, *domain.AddParticipantsModel) (*domain.RoomModel, error)
 		EnterRoom(context.Context, uuid.UUID) ([]*domain.MessageModel, error)
 		UpdateRoom(context.Context, *domain.RoomModel) (*domain.RoomModel, error)
+		GetUserInfo(context.Context, uuid.UUID) (*domain.UserModel, error)
 	}
 )

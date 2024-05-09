@@ -27,6 +27,13 @@ type User struct {
 	ID       uuid.UUID
 }
 
+type UserInfo struct {
+	Username string
+	Avatar   string
+	ID       uuid.UUID
+}
+
+
 type UpdateTokenModel struct {
 	RefreshToken string
 	ID           uuid.UUID

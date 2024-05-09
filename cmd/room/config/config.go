@@ -16,10 +16,14 @@ type (
 		PG           `yaml:"postgres"`
 		configs.Log  `yaml:"logger"`
 		configs.HTTP `yaml:"http"`
+		UserClient   `yaml:"user_client"`
 	}
 	PG struct {
 		DsnURL  string `env-required:"true" yaml:"dsn_url" env:"PG_DSN_URL"`
 		PoolMax int    `env-required:"true" yaml:"pool_max" env:"POOL_MAX"`
+	}
+	UserClient struct {
+		URL string `env-required:"true" yaml:"url" env:"USER_CLIENT_URL"`
 	}
 )
 

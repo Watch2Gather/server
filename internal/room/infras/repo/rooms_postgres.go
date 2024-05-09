@@ -94,19 +94,23 @@ func (r roomRepo) CreateRoom(ctx context.Context, model *domain.CreateRoomModel)
 	return &resRoom, nil
 }
 
-func (r *roomRepo) CreateMessage(ctx context.Context, model *domain.CreateMessageModel) error {
+func (r *roomRepo) CreateMessage(ctx context.Context, model *domain.CreateMessageModel) (*domain.SendMessageModel, error) {
 	querier := postgresql.New(r.pg.GetDB())
 
-	_, err := querier.CreateMessage(ctx, postgresql.CreateMessageParams{
+	msg, err := querier.CreateMessage(ctx, postgresql.CreateMessageParams{
 		RoomID:  model.RoomID,
 		UserID:  model.UserID,
 		Content: model.Content,
 	})
 	if err != nil {
-		return errors.Wrap(err, "querier.CreateMessage")
+		return nil, errors.Wrap(err, "querier.CreateMessage")
 	}
 
-	return nil
+	return &domain.SendMessageModel{
+		Text:      msg.Content,
+		CreatedAt: msg.CreatedAt.Unix(),
+		ID:        msg.ID,
+	}, nil
 }
 
 func (r *roomRepo) GetRoomsByUserID(ctx context.Context, id uuid.UUID) (_ []*domain.RoomModel, _ error) {

@@ -25,10 +25,15 @@ type CreateMessageModel struct {
 	UserID  uuid.UUID
 }
 
-
 type RemoveParticipantModel struct {
-	roomID uuid.UUID
+	RoomID uuid.UUID
 	UserID uuid.UUID
+}
+
+type UserModel struct {
+	ID     uuid.UUID
+	Name   string
+	Avatar string
 }
 
 type RoomModel struct {
@@ -65,9 +70,14 @@ type User struct {
 	ID     uuid.UUID
 }
 
-
 type AddParticipantsModel struct {
 	ParticipantIds uuid.UUIDs
 	RoomID         uuid.UUID
 	OwnerID        uuid.UUID
+}
+
+type SendMessageModel struct {
+	Text      string
+	CreatedAt int64
+	ID        uuid.UUID
 }

@@ -12,6 +12,7 @@ type App struct {
 	PG             postgres.DBEngine
 	UC             usersUC.UseCase
 	userGRPCServer gen.UserServiceServer
+	userInfoGRPCServer gen.UserInfoServiceServer
 }
 
 func New(
@@ -19,11 +20,13 @@ func New(
 	pg postgres.DBEngine,
 	uc usersUC.UseCase,
 	userGRPCServer gen.UserServiceServer,
+	userInfoGRPCServer gen.UserInfoServiceServer,
 ) *App {
 	return &App{
 		Cfg:            cfg,
 		PG:             pg,
 		UC:             uc,
 		userGRPCServer: userGRPCServer,
+		userInfoGRPCServer: userInfoGRPCServer,
 	}
 }

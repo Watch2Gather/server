@@ -9,6 +9,7 @@ package app
 import (
 	"github.com/Watch2Gather/server/cmd/room/config"
 	"github.com/Watch2Gather/server/internal/room/app/router"
+	grpc2 "github.com/Watch2Gather/server/internal/room/infras/grpc"
 	"github.com/Watch2Gather/server/internal/room/infras/repo"
 	"github.com/Watch2Gather/server/internal/room/usecases/rooms"
 	"github.com/Watch2Gather/server/pkg/postgres"
@@ -23,9 +24,14 @@ func InitApp(cfg *config.Config, dbConnStr postgres.DBConnString, grpcServer *gr
 		return nil, nil, err
 	}
 	roomRepo := repo.NewRoomRepo(dbEngine)
-	useCase := rooms.NewUseCase(roomRepo)
+	userInfoDomainService, err := grpc2.NewGRPCUserInfoClient(cfg)
+	if err != nil {
+		cleanup()
+		return nil, nil, err
+	}
+	useCase := rooms.NewUseCase(roomRepo, userInfoDomainService)
 	roomServiceServer := router.NewGRPCRoomServer(grpcServer, cfg, useCase)
-	app := New(cfg, dbEngine, useCase, roomServiceServer)
+	app := New(cfg, dbEngine, useCase, roomServiceServer, userInfoDomainService)
 	return app, func() {
 		cleanup()
 	}, nil

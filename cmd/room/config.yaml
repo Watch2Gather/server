@@ -10,5 +10,8 @@ postgres:
   pool_max: 2
   dsn_url: host=127.0.0.1 user=postgres password=password dbname=watch2gather sslmode=disable
 
+user_client:
+  url: 0.0.0.0:5002
+
 logger:
   log_level: "debug"

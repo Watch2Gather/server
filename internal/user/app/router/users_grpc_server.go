@@ -9,7 +9,6 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
 
 	"github.com/Watch2Gather/server/cmd/user/config"
@@ -39,8 +38,6 @@ func NewGRPCUsersServer(
 	}
 
 	gen.RegisterUserServiceServer(grpcServer, &svc)
-
-	reflection.Register(grpcServer)
 
 	return &svc
 }
@@ -185,12 +182,12 @@ func (g *userGRPCServer) ChangePassword(ctx context.Context, req *gen.ChangePass
 	}
 
 	err = g.uc.ChangePassword(ctx, &domain.ChangePasswordModel{
-		ID:              ID,
+		ID:          ID,
 		OldPassword: req.GetOldPassword(),
 		NewPassword: req.GetNewPassword(),
 	})
 	if err != nil {
-		if errors.Is(err, domain.ErrInvalidPassword){
+		if errors.Is(err, domain.ErrInvalidPassword) {
 			return nil, status.Error(codes.InvalidArgument, "Invalid password")
 		}
 		slog.Error("Caught error", "trace", errors.Wrap(err, "uc.ChangePassword"))

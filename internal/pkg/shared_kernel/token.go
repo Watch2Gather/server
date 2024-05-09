@@ -129,6 +129,10 @@ func TokenInterceptor(ctx context.Context, req any, info *grpc.UnaryServerInfo, 
 	if info.FullMethod == gen.UserService_LoginUser_FullMethodName {
 		return handler(ctx, req)
 	}
+	if info.FullMethod == gen.UserInfoService_GetUserInfo_FullMethodName {
+		return handler(ctx, req)
+	}
+
 	if info.FullMethod == gen.MovieService_GetAllMovies_FullMethodName {
 		return handler(ctx, req)
 	}
@@ -163,8 +167,6 @@ func valid(tokenString string) bool {
 		slog.Error(fmt.Sprintf("jwt.Parse: %e", err))
 		return false
 	}
-
-	slog.Debug("valid", "token", token)
 
 	return token.Valid
 }

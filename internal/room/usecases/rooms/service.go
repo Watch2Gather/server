@@ -14,9 +14,9 @@ import (
 )
 
 type usecase struct {
-	roomRepo RoomRepo
+	roomRepo          RoomRepo
+	userInfoDomainSvc domain.UserInfoDomainService
 }
-
 
 var _ UseCase = (*usecase)(nil)
 
@@ -24,11 +24,15 @@ var UseCaseSet = wire.NewSet(NewUseCase)
 
 func NewUseCase(
 	roomRepo RoomRepo,
+	userInfoDomainSvc domain.UserInfoDomainService,
 ) UseCase {
 	return &usecase{
-		roomRepo: roomRepo,
+		roomRepo:          roomRepo,
+		userInfoDomainSvc: userInfoDomainSvc,
 	}
 }
+
+var roomMessages map[uuid.UUID]sharedkernel.Broker[struct{}]
 
 func (u *usecase) CreateRoom(ctx context.Context, model *domain.CreateRoomModel) (*domain.RoomModel, error) {
 	if len(model.Name) == 0 {
@@ -62,19 +66,20 @@ func (usecase) LeaveRoom(ctx context.Context, _ uuid.UUID) error {
 	panic("not implemented") // TODO: Implement
 }
 
-func (u *usecase) SendMessage(ctx context.Context, model *domain.CreateMessageModel) error {
+func (u *usecase) SendMessage(ctx context.Context, model *domain.CreateMessageModel) (*domain.SendMessageModel, error) {
 	id, err := sharedkernel.GetUserIDFromContext(ctx)
 	if err != nil {
-		return errors.Wrap(err, "sharedkernel.GetUserIDFromContext")
+		return nil, errors.Wrap(err, "sharedkernel.GetUserIDFromContext")
 	}
 
 	model.UserID = id
 
-	err = u.roomRepo.CreateMessage(ctx, model)
+	msg, err := u.roomRepo.CreateMessage(ctx, model)
 	if err != nil {
-		return errors.Wrap(err, "roomRepo.CreateMessage")
+		return nil, errors.Wrap(err, "roomRepo.CreateMessage")
 	}
-	return nil
+
+	return msg, nil
 }
 
 func (u *usecase) GetRoomsByUser(ctx context.Context) ([]*domain.RoomModel, error) {
@@ -100,14 +105,12 @@ func (u *usecase) GetParticipantsByRoomID(ctx context.Context, id uuid.UUID) (uu
 	return participants, nil
 }
 
-
 func (usecase) InviteToRoom(ctx context.Context, model *domain.AddParticipantsModel) (*domain.RoomModel, error) {
 	panic("not implemented") // TODO: Implement
 }
 
 func (u *usecase) EnterRoom(ctx context.Context, id uuid.UUID) ([]*domain.MessageModel, error) {
 	messages, err := u.roomRepo.GetMessagesByRoomID(ctx, id)
-
 	if err != nil {
 		return nil, errors.Wrap(err, "roomRepo.CreateMessage")
 	}
@@ -116,4 +119,12 @@ func (u *usecase) EnterRoom(ctx context.Context, id uuid.UUID) ([]*domain.Messag
 
 func (usecase) UpdateRoom(ctx context.Context, model *domain.RoomModel) (*domain.RoomModel, error) {
 	panic("not implemented") // TODO: Implement
+}
+
+func (u *usecase) GetUserInfo(ctx context.Context, id uuid.UUID) (*domain.UserModel, error) {
+	user, err := u.userInfoDomainSvc.GetUserByID(ctx, id)
+	if err != nil {
+		return nil, errors.Wrap(err, "userInfo.GetUserInfo")
+	}
+	return user, nil
 }

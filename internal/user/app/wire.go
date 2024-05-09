@@ -26,6 +26,7 @@ func InitApp(
 
 		router.UserGRPCServerSet,
 		repo.RepositorySet,
+		router.UserInfoGRPCServerSet,
 		usersUC.UseCaseSet,
 	))
 }

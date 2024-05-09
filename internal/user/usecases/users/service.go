@@ -3,6 +3,7 @@ package users
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/google/wire"
 	"github.com/pkg/errors"
 
@@ -122,4 +123,16 @@ func (u *usecase) RefreshToken(ctx context.Context, model *domain.Token) (*domai
 	}
 
 	return &tokens, nil
+}
+
+func (u *usecase) GetUserData(ctx context.Context, id uuid.UUID) (*domain.UserInfo, error) {
+	user, err := u.userRepo.FindByID(ctx, id)
+	if err != nil {
+		return nil, errors.Wrap(err, "userRepo.Update")
+	}
+	return &domain.UserInfo{
+		Username: user.Username,
+		Avatar:   user.Avatar,
+		ID:       id,
+	}, nil
 }

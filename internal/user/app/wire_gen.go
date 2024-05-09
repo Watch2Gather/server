@@ -25,7 +25,8 @@ func InitApp(cfg *config.Config, dbConnStr postgres.DBConnString, grpcServer *gr
 	userRepo := repo.NewUserRepo(dbEngine)
 	useCase := users.NewUseCase(userRepo)
 	userServiceServer := router.NewGRPCUsersServer(grpcServer, cfg, useCase)
-	app := New(cfg, dbEngine, useCase, userServiceServer)
+	userInfoServiceServer := router.NewGRPCUserInfoServer(grpcServer, cfg, useCase)
+	app := New(cfg, dbEngine, useCase, userServiceServer, userInfoServiceServer)
 	return app, func() {
 		cleanup()
 	}, nil
