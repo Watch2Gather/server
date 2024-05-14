@@ -82,7 +82,7 @@ func (u *usecase) SendMessage(ctx context.Context, model *domain.CreateMessageMo
 	return msg, nil
 }
 
-func (u *usecase) GetRoomsByUser(ctx context.Context) ([]*domain.RoomModel, error) {
+func (u *usecase) GetRoomsByUser(ctx context.Context) ([]*domain.GetRoomsModel, error) {
 	id, err := sharedkernel.GetUserIDFromContext(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "sharedkernel.GetUserIDFromContext")
@@ -109,7 +109,7 @@ func (usecase) InviteToRoom(ctx context.Context, model *domain.AddParticipantsMo
 	panic("not implemented") // TODO: Implement
 }
 
-func (u *usecase) EnterRoom(ctx context.Context, id uuid.UUID) ([]*domain.MessageModel, error) {
+func (u *usecase) GetRoomMessages(ctx context.Context, id uuid.UUID) ([]*domain.MessageModel, error) {
 	messages, err := u.roomRepo.GetMessagesByRoomID(ctx, id)
 	if err != nil {
 		return nil, errors.Wrap(err, "roomRepo.CreateMessage")
@@ -117,8 +117,16 @@ func (u *usecase) EnterRoom(ctx context.Context, id uuid.UUID) ([]*domain.Messag
 	return messages, nil
 }
 
-func (usecase) UpdateRoom(ctx context.Context, model *domain.RoomModel) (*domain.RoomModel, error) {
-	panic("not implemented") // TODO: Implement
+func (u *usecase) UpdateRoom(ctx context.Context, model *domain.UpdateRoomModel) error {
+	err := u.roomRepo.UpdateRoom(ctx, &domain.UpdateRoomModel{
+		Name:    model.Name,
+		MovieID: model.MovieID,
+		RoomID:  model.RoomID,
+	})
+	if err != nil {
+		return errors.Wrap(err, "roomRepo.CreateMessage")
+	}
+	return nil
 }
 
 func (u *usecase) GetUserInfo(ctx context.Context, id uuid.UUID) (*domain.UserModel, error) {
@@ -127,4 +135,12 @@ func (u *usecase) GetUserInfo(ctx context.Context, id uuid.UUID) (*domain.UserMo
 		return nil, errors.Wrap(err, "userInfo.GetUserInfo")
 	}
 	return user, nil
+}
+
+func (u *usecase) AddMovieToRoom(ctx context.Context, model *domain.AddMovieModel) error {
+	err := u.roomRepo.AddMovieToRoom(ctx, model)
+	if err != nil {
+		return errors.Wrap(err, "roomRepo.AddMovieToRoom")
+	}
+	return nil
 }

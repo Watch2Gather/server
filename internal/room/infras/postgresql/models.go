@@ -19,6 +19,19 @@ type AppMessage struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
+type AppMovie struct {
+	ID          uuid.UUID      `json:"id"`
+	Title       string         `json:"title"`
+	Description string         `json:"description"`
+	KpRating    sql.NullString `json:"kp_rating"`
+	ImdbRating  sql.NullString `json:"imdb_rating"`
+	KpID        sql.NullInt32  `json:"kp_id"`
+	Year        int32          `json:"year"`
+	PosterPath  string         `json:"poster_path"`
+	Country     string         `json:"country"`
+	ReviewCount sql.NullInt32  `json:"review_count"`
+}
+
 type AppParticipant struct {
 	RoomID uuid.UUID `json:"room_id"`
 	UserID uuid.UUID `json:"user_id"`

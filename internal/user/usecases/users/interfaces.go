@@ -15,7 +15,10 @@ type (
 		UpdatePassword(context.Context, *domain.ChangePasswordModel) error
 		CheckPassword(context.Context, *domain.LoginModel) (uuid.UUID, string, error)
 		FindByID(context.Context, uuid.UUID) (*domain.User, error)
+		FindByName(context.Context, string) (*domain.User, error)
 		UpdateToken(context.Context, *domain.UpdateTokenModel) error
+		GetAllFriends(context.Context, uuid.UUID) ([]*domain.User, error)
+		AddFriend(context.Context, *domain.AddFriendModel) error
 	}
 	UseCase interface {
 		Login(context.Context, *domain.LoginModel) (*domain.Token, error)
@@ -24,5 +27,8 @@ type (
 		ChangeUserData(context.Context, *domain.User) (*domain.User, error)
 		RefreshToken(context.Context, *domain.Token) (*domain.Token, error)
 		GetUserData(context.Context, uuid.UUID) (*domain.UserInfo, error)
+		GetAvatar(context.Context, string) (*[]byte, error)
+		GetAllFriends(context.Context, uuid.UUID) ([]*domain.User, error)
+		AddFriend(context.Context, *domain.AddFriendModel) error
 	}
 )

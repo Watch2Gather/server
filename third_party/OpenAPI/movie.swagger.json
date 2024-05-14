@@ -38,10 +38,12 @@
         "tags": [
           "Movie"
         ]
-      },
-      "post": {
-        "summary": "Get movie",
-        "description": "Get full info a movie",
+      }
+    },
+    "/api/v1/movies/poster/{filePath}": {
+      "get": {
+        "summary": "Get movie poster",
+        "description": "Get movie poster",
         "operationId": "MovieService_GetMoviePoster",
         "responses": {
           "200": {
@@ -59,12 +61,10 @@
         },
         "parameters": [
           {
-            "name": "body",
-            "in": "body",
+            "name": "filePath",
+            "in": "path",
             "required": true,
-            "schema": {
-              "$ref": "#/definitions/movieapiGetMoviePosterRequest"
-            }
+            "type": "string"
           }
         ],
         "tags": [
@@ -115,14 +115,6 @@
             "type": "object",
             "$ref": "#/definitions/movieapiShortMovie"
           }
-        }
-      }
-    },
-    "movieapiGetMoviePosterRequest": {
-      "type": "object",
-      "properties": {
-        "filePath": {
-          "type": "string"
         }
       }
     },

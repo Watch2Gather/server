@@ -24,6 +24,9 @@ const (
 	UserService_ChangeUserData_FullMethodName = "/watch2gather.proto.userapi.UserService/ChangeUserData"
 	UserService_ChangePassword_FullMethodName = "/watch2gather.proto.userapi.UserService/ChangePassword"
 	UserService_RefreshToken_FullMethodName   = "/watch2gather.proto.userapi.UserService/RefreshToken"
+	UserService_GetAvatar_FullMethodName      = "/watch2gather.proto.userapi.UserService/GetAvatar"
+	UserService_GetFriends_FullMethodName     = "/watch2gather.proto.userapi.UserService/GetFriends"
+	UserService_AddFriends_FullMethodName     = "/watch2gather.proto.userapi.UserService/AddFriends"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -35,6 +38,9 @@ type UserServiceClient interface {
 	ChangeUserData(ctx context.Context, in *ChangeUserDataRequest, opts ...grpc.CallOption) (*ChangeUserDataResponse, error)
 	ChangePassword(ctx context.Context, in *ChangePasswordRequest, opts ...grpc.CallOption) (*ChangePasswordResponse, error)
 	RefreshToken(ctx context.Context, in *RefreshTokenRequest, opts ...grpc.CallOption) (*RefreshTokenResponse, error)
+	GetAvatar(ctx context.Context, in *GetAvatarRequest, opts ...grpc.CallOption) (*GetAvatarResponse, error)
+	GetFriends(ctx context.Context, in *GetFriendsRequest, opts ...grpc.CallOption) (*GetFriendsResponse, error)
+	AddFriends(ctx context.Context, in *AddFriendRequest, opts ...grpc.CallOption) (*AddFriendResponse, error)
 }
 
 type userServiceClient struct {
@@ -90,6 +96,33 @@ func (c *userServiceClient) RefreshToken(ctx context.Context, in *RefreshTokenRe
 	return out, nil
 }
 
+func (c *userServiceClient) GetAvatar(ctx context.Context, in *GetAvatarRequest, opts ...grpc.CallOption) (*GetAvatarResponse, error) {
+	out := new(GetAvatarResponse)
+	err := c.cc.Invoke(ctx, UserService_GetAvatar_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) GetFriends(ctx context.Context, in *GetFriendsRequest, opts ...grpc.CallOption) (*GetFriendsResponse, error) {
+	out := new(GetFriendsResponse)
+	err := c.cc.Invoke(ctx, UserService_GetFriends_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) AddFriends(ctx context.Context, in *AddFriendRequest, opts ...grpc.CallOption) (*AddFriendResponse, error) {
+	out := new(AddFriendResponse)
+	err := c.cc.Invoke(ctx, UserService_AddFriends_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServiceServer is the server API for UserService service.
 // All implementations should embed UnimplementedUserServiceServer
 // for forward compatibility
@@ -99,6 +132,9 @@ type UserServiceServer interface {
 	ChangeUserData(context.Context, *ChangeUserDataRequest) (*ChangeUserDataResponse, error)
 	ChangePassword(context.Context, *ChangePasswordRequest) (*ChangePasswordResponse, error)
 	RefreshToken(context.Context, *RefreshTokenRequest) (*RefreshTokenResponse, error)
+	GetAvatar(context.Context, *GetAvatarRequest) (*GetAvatarResponse, error)
+	GetFriends(context.Context, *GetFriendsRequest) (*GetFriendsResponse, error)
+	AddFriends(context.Context, *AddFriendRequest) (*AddFriendResponse, error)
 }
 
 // UnimplementedUserServiceServer should be embedded to have forward compatible implementations.
@@ -119,6 +155,15 @@ func (UnimplementedUserServiceServer) ChangePassword(context.Context, *ChangePas
 }
 func (UnimplementedUserServiceServer) RefreshToken(context.Context, *RefreshTokenRequest) (*RefreshTokenResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RefreshToken not implemented")
+}
+func (UnimplementedUserServiceServer) GetAvatar(context.Context, *GetAvatarRequest) (*GetAvatarResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAvatar not implemented")
+}
+func (UnimplementedUserServiceServer) GetFriends(context.Context, *GetFriendsRequest) (*GetFriendsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetFriends not implemented")
+}
+func (UnimplementedUserServiceServer) AddFriends(context.Context, *AddFriendRequest) (*AddFriendResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddFriends not implemented")
 }
 
 // UnsafeUserServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -222,6 +267,60 @@ func _UserService_RefreshToken_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_GetAvatar_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAvatarRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).GetAvatar(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_GetAvatar_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).GetAvatar(ctx, req.(*GetAvatarRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_GetFriends_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetFriendsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).GetFriends(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_GetFriends_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).GetFriends(ctx, req.(*GetFriendsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_AddFriends_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddFriendRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).AddFriends(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_AddFriends_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).AddFriends(ctx, req.(*AddFriendRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -248,6 +347,18 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RefreshToken",
 			Handler:    _UserService_RefreshToken_Handler,
+		},
+		{
+			MethodName: "GetAvatar",
+			Handler:    _UserService_GetAvatar_Handler,
+		},
+		{
+			MethodName: "GetFriends",
+			Handler:    _UserService_GetFriends_Handler,
+		},
+		{
+			MethodName: "AddFriends",
+			Handler:    _UserService_AddFriends_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

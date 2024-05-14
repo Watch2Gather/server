@@ -13,6 +13,22 @@ import (
 	"github.com/google/uuid"
 )
 
+const addMovieToRoom = `-- name: AddMovieToRoom :exec
+UPDATE "app".rooms
+  SET movie_id=$2
+  WHERE id=$1
+`
+
+type AddMovieToRoomParams struct {
+	ID      uuid.UUID     `json:"id"`
+	MovieID uuid.NullUUID `json:"movie_id"`
+}
+
+func (q *Queries) AddMovieToRoom(ctx context.Context, arg AddMovieToRoomParams) error {
+	_, err := q.db.ExecContext(ctx, addMovieToRoom, arg.ID, arg.MovieID)
+	return err
+}
+
 const addParticipant = `-- name: AddParticipant :exec
 INSERT INTO "app".participants (
   room_id, user_id
@@ -197,23 +213,27 @@ func (q *Queries) GetRoomOwner(ctx context.Context, id uuid.UUID) (uuid.UUID, er
 }
 
 const getRoomsByUserId = `-- name: GetRoomsByUserId :many
-SELECT id, name, owner_id, movie_id, timecode, (
+SELECT r.id, r.name, r.owner_id, r.movie_id, m.title, m.poster_path ,r.timecode, (
   SELECT COUNT(*) FROM "app".participants as p
   WHERE p.room_id = r.id
 )
 FROM "app".rooms as r
 INNER JOIN "app".participants AS p
   ON r.id = p.room_id
-  WHERE p.user_id = $1
+LEFT JOIN "app".movies AS m
+  ON m.id = r.movie_id
+WHERE p.user_id = $1
 `
 
 type GetRoomsByUserIdRow struct {
-	ID       uuid.UUID     `json:"id"`
-	Name     string        `json:"name"`
-	OwnerID  uuid.UUID     `json:"owner_id"`
-	MovieID  uuid.NullUUID `json:"movie_id"`
-	Timecode sql.NullTime  `json:"timecode"`
-	Count    int64         `json:"count"`
+	ID         uuid.UUID      `json:"id"`
+	Name       string         `json:"name"`
+	OwnerID    uuid.UUID      `json:"owner_id"`
+	MovieID    uuid.NullUUID  `json:"movie_id"`
+	Title      sql.NullString `json:"title"`
+	PosterPath sql.NullString `json:"poster_path"`
+	Timecode   sql.NullTime   `json:"timecode"`
+	Count      int64          `json:"count"`
 }
 
 func (q *Queries) GetRoomsByUserId(ctx context.Context, userID uuid.UUID) ([]GetRoomsByUserIdRow, error) {
@@ -230,6 +250,8 @@ func (q *Queries) GetRoomsByUserId(ctx context.Context, userID uuid.UUID) ([]Get
 			&i.Name,
 			&i.OwnerID,
 			&i.MovieID,
+			&i.Title,
+			&i.PosterPath,
 			&i.Timecode,
 			&i.Count,
 		); err != nil {

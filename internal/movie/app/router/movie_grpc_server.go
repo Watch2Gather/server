@@ -12,6 +12,7 @@ import (
 
 	"github.com/Watch2Gather/server/cmd/movie/config"
 	"github.com/Watch2Gather/server/internal/movie/usecases/movies"
+	sharedkernel "github.com/Watch2Gather/server/internal/pkg/shared_kernel"
 	"github.com/Watch2Gather/server/proto/gen"
 )
 
@@ -44,59 +45,22 @@ func NewGRPCMovieServer(
 func (g *movieGRPCServer) GetAllMovies(ctx context.Context, req *gen.GetAllMoviesRequest) (*gen.GetAllMoviesResponse, error) {
 	slog.Info("GET: GetAllMovies")
 
-	// movies, err := g.uc.GetAllMovies(ctx)
-	// if err != nil {
-	// 	slog.Error("Caught error", "trace", errors.Wrap(err, "uc.GetAllMovies"))
-	// 	return nil, sharedkernel.ErrServer
-	// }
-	//
-	// _ = movies
+	movies, err := g.uc.GetAllMovies(ctx)
+	if err != nil {
+		slog.Error("Caught error", "trace", errors.Wrap(err, "uc.GetAllMovies"))
+		return nil, sharedkernel.ErrServer
+	}
 
-	res := &gen.GetAllMoviesResponse{
-		Movies: []*gen.ShortMovie{
-			{
-				Title:      "Lord of the Rings 1",
-				Id:         uuid.New().String(),
-				KpRating:   45,
-				KpId:       123,
-				PosterPath: "lord_of_the_rings_1",
-			},
-			{
-				Title:      "Lord of the Rings 2",
-				Id:         uuid.New().String(),
-				KpRating:   46,
-				KpId:       124,
-				PosterPath: "lord_of_the_rings_2",
-			},
-			{
-				Title:      "Lord of the Rings 3",
-				Id:         uuid.New().String(),
-				KpRating:   47,
-				KpId:       125,
-				PosterPath: "lord_of_the_rings_3",
-			},
-			{
-				Title:      "Shrek 1",
-				Id:         uuid.New().String(),
-				KpRating:   47,
-				KpId:       126,
-				PosterPath: "shrek_1",
-			},
-			{
-				Title:      "Shrek 2",
-				Id:         uuid.New().String(),
-				KpRating:   37,
-				KpId:       127,
-				PosterPath: "shrek_2",
-			},
-			{
-				Title:      "Shrek 3",
-				Id:         uuid.New().String(),
-				KpRating:   47,
-				KpId:       128,
-				PosterPath: "shrek_3",
-			},
-		},
+	res := &gen.GetAllMoviesResponse{}
+
+	for _, movie := range movies {
+		res.Movies = append(res.Movies, &gen.ShortMovie{
+			Id:         movie.ID.String(),
+			Title:      movie.Title,
+			KpRating:   int32(movie.KpRating),
+			KpId:       int32(movie.KpID),
+			PosterPath: movie.PosterPath,
+		})
 	}
 
 	return res, nil

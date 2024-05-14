@@ -2,7 +2,9 @@ version: "2"
 sql:
   - engine: "postgresql"
     queries: "internal/user/infras/postgresql/query/query.sql"
-    schema: "db/migrations/000001_users.up.sql"
+    schema:
+    - "db/migrations/000001_users.up.sql"
+    - "db/migrations/000007_friends.up.sql"
     gen:
       go:
         package: "postgresql"
@@ -12,6 +14,7 @@ sql:
     queries: "internal/room/infras/postgresql/query/query.sql"
     schema:
     - "db/migrations/000001_users.up.sql"
+    - "db/migrations/000002_movies.up.sql"
     - "db/migrations/000003_rooms.up.sql"
     - "db/migrations/000005_participants.up.sql"
     - "db/migrations/000006_messages.up.sql"

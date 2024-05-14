@@ -63,6 +63,56 @@ service UserService {
       tags: "Users"
     };
   }
+  rpc GetAvatar (GetAvatarRequest) returns (GetAvatarResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/users/avatar/{filePath}"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Get user avatar"
+      description: "Get user avatar"
+      tags: "Users"
+    };
+  }
+  rpc GetFriends (GetFriendsRequest) returns (GetFriendsResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/users/friends"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Get friends"
+      description: "Get all user friends"
+      tags: "Users"
+    };
+  }
+  rpc AddFriends (AddFriendRequest) returns (AddFriendResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/users/friends"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Add friends"
+      description: "Add a list of frieds"
+      tags: "Users"
+    };
+  }
+}
+
+message GetFriendsRequest {
+}
+
+message GetFriendsResponse {
+  repeated Friend friends = 1;
+}
+
+message Friend {
+  string username = 1;
+  string avatar = 2;
+}
+
+message AddFriendRequest {
+  string username = 1;
+}
+
+message AddFriendResponse {
 }
 
 message RegisterUserRequest {
@@ -102,6 +152,15 @@ message ChangePasswordRequest {
 }
 
 message ChangePasswordResponse {}
+
+message GetAvatarRequest {
+  string filePath = 1;
+}
+
+message GetAvatarResponse {
+  bytes avatar = 1;
+}
+
 
 message RefreshTokenRequest {
   string refreshToken = 1;

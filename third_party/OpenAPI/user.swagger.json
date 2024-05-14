@@ -185,6 +185,94 @@
           "Users"
         ]
       }
+    },
+    "/api/v1/users/avatar/{filePath}": {
+      "get": {
+        "summary": "Get user avatar",
+        "description": "Get user avatar",
+        "operationId": "UserService_GetAvatar",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/userapiGetAvatarResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "filePath",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/v1/users/friends": {
+      "get": {
+        "summary": "Get friends",
+        "description": "Get all user friends",
+        "operationId": "UserService_GetFriends",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/userapiGetFriendsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      },
+      "post": {
+        "summary": "Add friends",
+        "description": "Add a list of frieds",
+        "operationId": "UserService_AddFriends",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/userapiAddFriendResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/userapiAddFriendRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Users"
+        ]
+      }
     }
   },
   "definitions": {
@@ -215,6 +303,17 @@
           }
         }
       }
+    },
+    "userapiAddFriendRequest": {
+      "type": "object",
+      "properties": {
+        "username": {
+          "type": "string"
+        }
+      }
+    },
+    "userapiAddFriendResponse": {
+      "type": "object"
     },
     "userapiChangePasswordRequest": {
       "type": "object",
@@ -255,6 +354,38 @@
         },
         "avatar": {
           "type": "string"
+        }
+      }
+    },
+    "userapiFriend": {
+      "type": "object",
+      "properties": {
+        "username": {
+          "type": "string"
+        },
+        "avatar": {
+          "type": "string"
+        }
+      }
+    },
+    "userapiGetAvatarResponse": {
+      "type": "object",
+      "properties": {
+        "avatar": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "userapiGetFriendsResponse": {
+      "type": "object",
+      "properties": {
+        "friends": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/userapiFriend"
+          }
         }
       }
     },

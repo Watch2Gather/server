@@ -31,9 +31,14 @@ type RemoveParticipantModel struct {
 }
 
 type UserModel struct {
-	ID     uuid.UUID
 	Name   string
 	Avatar string
+	ID     uuid.UUID
+}
+
+type AddMovieModel struct {
+	RoomID  uuid.UUID
+	MovieID uuid.UUID
 }
 
 type RoomModel struct {
@@ -43,6 +48,17 @@ type RoomModel struct {
 	OwnerID           uuid.UUID
 	MovieID           uuid.UUID
 	ID                uuid.UUID
+}
+
+type GetRoomsModel struct {
+	Name              string
+	FilmTitle         string
+	PosterPath        string
+	ParticipantsCount int
+	Timecode          int
+	OwnerID           uuid.UUID
+	ID                uuid.UUID
+	MovieID           string
 }
 
 type ParticipantModel struct {

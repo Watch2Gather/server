@@ -12,6 +12,22 @@ import (
 	"github.com/google/uuid"
 )
 
+const addFriendById = `-- name: AddFriendById :exec
+INSERT INTO "app".friends (
+  user_id_1, user_id_2
+) VALUES ( $1, $2 )
+`
+
+type AddFriendByIdParams struct {
+	UserID1 uuid.UUID `json:"user_id_1"`
+	UserID2 uuid.UUID `json:"user_id_2"`
+}
+
+func (q *Queries) AddFriendById(ctx context.Context, arg AddFriendByIdParams) error {
+	_, err := q.db.ExecContext(ctx, addFriendById, arg.UserID1, arg.UserID2)
+	return err
+}
+
 const createUser = `-- name: CreateUser :one
 INSERT INTO "app".users (
   username, email, pwd_hash
@@ -38,6 +54,41 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateU
 	var i CreateUserRow
 	err := row.Scan(&i.Username, &i.Email, &i.Avatar)
 	return i, err
+}
+
+const getFriendList = `-- name: GetFriendList :many
+SELECT user_id_2 as id, u.username, u.avatar FROM "app".friends as f
+  join "app".users as u on f.user_id_2 = u.id
+  WHERE f.user_id_1 = $1
+`
+
+type GetFriendListRow struct {
+	ID       uuid.UUID      `json:"id"`
+	Username string         `json:"username"`
+	Avatar   sql.NullString `json:"avatar"`
+}
+
+func (q *Queries) GetFriendList(ctx context.Context, userID1 uuid.UUID) ([]GetFriendListRow, error) {
+	rows, err := q.db.QueryContext(ctx, getFriendList, userID1)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetFriendListRow
+	for rows.Next() {
+		var i GetFriendListRow
+		if err := rows.Scan(&i.ID, &i.Username, &i.Avatar); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getPasswordById = `-- name: GetPasswordById :one

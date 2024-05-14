@@ -219,3 +219,67 @@ func (g *userGRPCServer) RefreshToken(ctx context.Context, req *gen.RefreshToken
 		RefreshToken: tokens.RefreshToken,
 	}, nil
 }
+
+func (g *userGRPCServer) GetAvatar(ctx context.Context, req *gen.GetAvatarRequest) (*gen.GetAvatarResponse, error) {
+	slog.Info("GET: GetAvatar")
+	slog.Debug("avatar", "req", req)
+
+	avatar, err := g.uc.GetAvatar(ctx, req.GetFilePath())
+	if err != nil {
+		slog.Error("Caught error", "trace", errors.Wrap(err, "uc.GetMoviePoster"))
+		return nil, sharedkernel.ErrServer
+	}
+
+	res := &gen.GetAvatarResponse{
+		Avatar: *avatar,
+	}
+
+	return res, nil
+}
+
+func (g *userGRPCServer) GetFriends(ctx context.Context, req *gen.GetFriendsRequest) (*gen.GetFriendsResponse, error) {
+	slog.Info("GET: GetFriends")
+
+	id, err := sharedkernel.GetUserIDFromContext(ctx)
+	if err != nil {
+		slog.Error("Caught error", "trace", errors.Wrap(err, "uc.GetMoviePoster"))
+		return nil, sharedkernel.ErrServer
+	}
+
+	friends, err := g.uc.GetAllFriends(ctx, id)
+	if err != nil {
+		slog.Error("Caught error", "trace", errors.Wrap(err, "uc.GetMoviePoster"))
+		return nil, sharedkernel.ErrServer
+	}
+	res := &gen.GetFriendsResponse{}
+
+	for _, friend := range friends {
+		res.Friends = append(res.Friends, &gen.Friend{
+			Username: friend.Username,
+			Avatar:   friend.Avatar,
+		})
+	}
+
+	return res, nil
+}
+
+func (g *userGRPCServer) AddFriends(ctx context.Context, req *gen.AddFriendRequest) (*gen.AddFriendResponse, error) {
+	slog.Info("GET: GetFriends")
+
+	id, err := sharedkernel.GetUserIDFromContext(ctx)
+	if err != nil {
+		slog.Error("Caught error", "trace", errors.Wrap(err, "uc.GetMoviePoster"))
+		return nil, sharedkernel.ErrServer
+	}
+
+	err = g.uc.AddFriend(ctx, &domain.AddFriendModel{
+		FriendName: req.GetUsername(),
+		UserID:     id,
+	})
+	if err != nil {
+		slog.Error("Caught error", "trace", errors.Wrap(err, "uc.GetMoviePoster"))
+		return nil, sharedkernel.ErrServer
+	}
+
+	return &gen.AddFriendResponse{}, nil
+}

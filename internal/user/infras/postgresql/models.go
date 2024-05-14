@@ -10,6 +10,11 @@ import (
 	"github.com/google/uuid"
 )
 
+type AppFriend struct {
+	UserID1 uuid.UUID `json:"user_id_1"`
+	UserID2 uuid.UUID `json:"user_id_2"`
+}
+
 type AppUser struct {
 	ID       uuid.UUID      `json:"id"`
 	Username string         `json:"username"`

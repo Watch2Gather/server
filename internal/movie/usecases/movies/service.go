@@ -27,8 +27,15 @@ func NewUseCase(
 	}
 }
 
-func (usecase) GetAllMovies(_ context.Context) (_ []*domain.ShortMovieModel, _ error) {
-	panic("not implemented") // TODO: Implement
+var pathPrefix = os.Getenv("POSTER_PATH_PREFIX")
+
+func (u *usecase) GetAllMovies(ctx context.Context) ([]*domain.ShortMovieModel, error) {
+	movies, err := u.movieRepo.GetAllMovies(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "roomRepo.GetRoomsByUserID")
+	}
+
+	return movies, nil
 }
 
 func (usecase) GetMovieInfo(_ context.Context, _ uuid.UUID) (_ *domain.MovieModel, _ error) {
@@ -36,9 +43,7 @@ func (usecase) GetMovieInfo(_ context.Context, _ uuid.UUID) (_ *domain.MovieMode
 }
 
 func (usecase) GetMoviePoster(ctx context.Context, path string) (*[]byte, error) {
-	// panic("not implemented") // TODO: Implement
-
-	f, err := os.ReadFile(path)
+	f, err := os.ReadFile(pathPrefix + path)
 	if err != nil {
 		return nil, errors.Wrap(err, "os.Open")
 	}

@@ -30,15 +30,13 @@ service MovieService {
   }
   rpc GetMoviePoster (GetMoviePosterRequest) returns (GetMoviePosterResponse) {
     option (google.api.http) = {
-      post: "/api/v1/movies"
-      body: "*"
+      get: "/api/v1/movies/poster/{filePath}"
     };
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      summary: "Get movie"
-      description: "Get full info a movie"
+      summary: "Get movie poster"
+      description: "Get movie poster"
       tags: "Movie"
     };
-
   }
 }
 

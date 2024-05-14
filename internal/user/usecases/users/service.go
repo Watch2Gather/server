@@ -2,6 +2,7 @@ package users
 
 import (
 	"context"
+	"os"
 
 	"github.com/google/uuid"
 	"github.com/google/wire"
@@ -26,6 +27,8 @@ func NewUseCase(
 		userRepo: userRepo,
 	}
 }
+
+var pathPrefix = os.Getenv("AVATAR_PATH_PREFIX")
 
 func (u *usecase) Login(ctx context.Context, model *domain.LoginModel) (*domain.Token, error) {
 	id, email, err := u.userRepo.CheckPassword(ctx, model)
@@ -135,4 +138,35 @@ func (u *usecase) GetUserData(ctx context.Context, id uuid.UUID) (*domain.UserIn
 		Avatar:   user.Avatar,
 		ID:       id,
 	}, nil
+}
+
+func (usecase) GetAvatar(ctx context.Context, path string) (*[]byte, error) {
+	f, err := os.ReadFile(pathPrefix + path)
+	if err != nil {
+		return nil, errors.Wrap(err, "os.Open")
+	}
+
+	return &f, nil
+}
+
+func (u *usecase) GetAllFriends(ctx context.Context, id uuid.UUID) ([]*domain.User, error) {
+	users, err := u.userRepo.GetAllFriends(ctx, id)
+	if err != nil {
+		return nil, errors.Wrap(err, "userRepo.GetAllFriends")
+	}
+	return users, nil
+}
+
+func (u *usecase) AddFriend(ctx context.Context, model *domain.AddFriendModel) error {
+	friend, err := u.userRepo.FindByName(ctx, model.FriendName)
+	if err != nil {
+		return errors.Wrap(err, "userRepo.FindByName")
+	}
+	model.FriendID = friend.ID
+
+	err = u.userRepo.AddFriend(ctx, model)
+	if err != nil {
+		return errors.Wrap(err, "userRepo.GetAllFriends")
+	}
+	return nil
 }

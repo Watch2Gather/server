@@ -140,7 +140,7 @@ func (u *userRepo) UpdatePassword(ctx context.Context, model *domain.ChangePassw
 
 	err = bcrypt.CompareHashAndPassword([]byte(oldPwdHash), []byte(model.OldPassword))
 	if err != nil {
-		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword){
+		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
 			return domain.ErrInvalidPassword
 		}
 		return errors.Wrap(err, "bcrypt.CompareHashAndPassword")
@@ -159,6 +159,22 @@ func (u *userRepo) UpdatePassword(ctx context.Context, model *domain.ChangePassw
 	}
 
 	return nil
+}
+
+func (u *userRepo) FindByName(ctx context.Context, name string) (*domain.User, error) {
+	querier := postgresql.New(u.pg.GetDB())
+
+	user, err := querier.GetUserByUsername(ctx, name)
+	if err != nil {
+		return nil, errors.Wrap(err, "querier.GetUserByName")
+	}
+
+	return &domain.User{
+		Username: user.Username,
+		Email:    user.Email,
+		Avatar:   user.Avatar.String,
+		ID:       user.ID,
+	}, nil
 }
 
 func (u *userRepo) FindByID(ctx context.Context, id uuid.UUID) (*domain.User, error) {
@@ -191,6 +207,48 @@ func (u *userRepo) UpdateToken(ctx context.Context, model *domain.UpdateTokenMod
 	})
 	if err != nil {
 		return errors.Wrap(err, "querier.UpdateToken")
+	}
+
+	return nil
+}
+
+func (u *userRepo) GetAllFriends(ctx context.Context, id uuid.UUID) ([]*domain.User, error) {
+	querier := postgresql.New(u.pg.GetDB())
+
+	friends, err := querier.GetFriendList(ctx, id)
+	if err != nil {
+		return nil, errors.Wrap(err, "querier.GetFriendList")
+	}
+
+	var res []*domain.User
+	for _, friend := range friends {
+		res = append(res, &domain.User{
+			Username: friend.Username,
+			Avatar:   friend.Avatar.String,
+			ID:       friend.ID,
+		})
+	}
+
+	return res, nil
+}
+
+func (u *userRepo) AddFriend(ctx context.Context, model *domain.AddFriendModel) error {
+	querier := postgresql.New(u.pg.GetDB())
+
+	err := querier.AddFriendById(ctx, postgresql.AddFriendByIdParams{
+		UserID1: model.UserID,
+		UserID2: model.FriendID,
+	})
+	if err != nil {
+		return errors.Wrap(err, "querier.AddFriendById1")
+	}
+
+	err = querier.AddFriendById(ctx, postgresql.AddFriendByIdParams{
+		UserID2: model.UserID,
+		UserID1: model.FriendID,
+	})
+	if err != nil {
+		return errors.Wrap(err, "querier.AddFriendById2")
 	}
 
 	return nil

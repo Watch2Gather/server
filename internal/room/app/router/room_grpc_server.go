@@ -107,11 +107,13 @@ func (g *roomGRPCServer) GetRoomsByUser(ctx context.Context, req *gen.GetRoomsBy
 
 	for _, room := range rooms {
 		res.Rooms = append(res.Rooms, &gen.Room{
+			Name:              room.Name,
 			Id:                room.ID.String(),
 			OwnerId:           room.OwnerID.String(),
 			ParticipantsCount: int32(room.ParticipantsCount),
-			FilmTitle:         "",
-			FilmPoster:        "",
+			FilmTitle:         room.FilmTitle,
+			PosterPath:        room.PosterPath,
+			MovieId:           room.MovieID,
 		})
 	}
 
@@ -157,13 +159,14 @@ func (g *roomGRPCServer) InviteToRoom(ctx context.Context, req *gen.InviteToRoom
 }
 
 func (g *roomGRPCServer) GetMessagesByRoom(ctx context.Context, req *gen.GetMessagesByRoomRequest) (*gen.GetMessagesByRoomResponse, error) {
+	slog.Info("GET: GetMessagesByRoom")
 	roomID, err := uuid.Parse(req.RoomId)
 	if err != nil {
 		slog.Error("Caught error", "trace", errors.Wrap(err, "uuid.Parse"))
 		return nil, sharedkernel.ErrServer
 	}
 
-	messages, err := g.uc.EnterRoom(ctx, roomID)
+	messages, err := g.uc.GetRoomMessages(ctx, roomID)
 	// slog.Debug("Getting Messages", "messages", messages)
 	if err != nil {
 		slog.Error("Caught error", "trace", errors.Wrap(err, "uc.CreateRoom"))
@@ -200,13 +203,11 @@ func (g *roomGRPCServer) EnterRoom(req *gen.EnterRoomRequest, srv gen.RoomServic
 	}
 
 	broker, ok := roomMessages[roomID]
-	slog.Debug("Map declaration", "map", roomMessages, "ok", ok)
 	if !ok {
 		broker = sharedkernel.NewBroker[*gen.Message]()
 		roomMessages[roomID] = broker
 		go broker.Start()
 	}
-	slog.Debug("Map declaration", "map", roomMessages, "ok", ok)
 
 	go func() {
 		msgCh := broker.Subscribe()
@@ -243,15 +244,6 @@ func (g *roomGRPCServer) SendMessage(ctx context.Context, req *gen.SendMessageRe
 		return nil, sharedkernel.ErrServer
 	}
 
-	msg, err := g.uc.SendMessage(ctx, &domain.CreateMessageModel{
-		Content: req.GetText(),
-		RoomID:  rID,
-	})
-	if err != nil {
-		slog.Error("Caught error", "trace", errors.Wrap(err, "uc.CreateRoom"))
-		return nil, sharedkernel.ErrServer
-	}
-
 	user, err := g.uc.GetUserInfo(ctx, uID)
 	if err != nil {
 		slog.Error("Caught error", "trace", errors.Wrap(err, "uc.GetUserInfo"))
@@ -262,6 +254,15 @@ func (g *roomGRPCServer) SendMessage(ctx context.Context, req *gen.SendMessageRe
 	if !ok {
 		slog.Error("Caught error", "trace", errors.Wrap(err, "uuid.Parse"))
 		return nil, domain.ErrNoRoomOpen
+	}
+
+	msg, err := g.uc.SendMessage(ctx, &domain.CreateMessageModel{
+		Content: req.GetText(),
+		RoomID:  rID,
+	})
+	if err != nil {
+		slog.Error("Caught error", "trace", errors.Wrap(err, "uc.CreateRoom"))
+		return nil, sharedkernel.ErrServer
 	}
 
 	broker.Publish(&gen.Message{
@@ -278,8 +279,39 @@ func (g *roomGRPCServer) SendMessage(ctx context.Context, req *gen.SendMessageRe
 	return &gen.SendMessageResponse{}, nil
 }
 
-func (roomGRPCServer) UpdateRoom(_ context.Context, _ *gen.UpdateRoomRequest) (_ *gen.UpdateRoomResponse, _ error) {
-	panic("not implemented") // TODO: Implement
+func (g *roomGRPCServer) UpdateRoom(ctx context.Context, req *gen.UpdateRoomRequest) (*gen.UpdateRoomResponse, error) {
+	slog.Info("POST: UpdateRoom")
+
+	roomID, err := uuid.Parse(req.GetRoomId())
+	if err != nil {
+		slog.Debug("uuid1", "roomID", req.GetRoomId())
+		slog.Error("Caught error", "trace", errors.Wrap(err, "uuid.Parse"))
+		return nil, sharedkernel.ErrServer
+	}
+
+	var movieID uuid.UUID
+	if req.GetFilmId() != "" {
+		movieID, err = uuid.Parse(req.GetFilmId())
+		if err != nil {
+			slog.Debug("uuid2", "movieID", req.GetFilmId())
+			slog.Error("Caught error", "trace", errors.Wrap(err, "uuid.Parse"))
+			return nil, sharedkernel.ErrServer
+		}
+	} else {
+		movieID = uuid.Nil
+	}
+
+	err = g.uc.UpdateRoom(ctx, &domain.UpdateRoomModel{
+		Name:    req.GetRoomName(),
+		MovieID: movieID,
+		RoomID:  roomID,
+	})
+	if err != nil {
+		slog.Error("Caught error", "trace", errors.Wrap(err, "uc.CreateRoom"))
+		return nil, sharedkernel.ErrServer
+	}
+
+	return &gen.UpdateRoomResponse{}, nil
 }
 
 func (roomGRPCServer) DeleteRoom(_ context.Context, _ *gen.DeleteRoomRequest) (_ *gen.DeleteRoomResponse, _ error) {

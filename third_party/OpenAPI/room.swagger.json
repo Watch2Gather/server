@@ -469,7 +469,10 @@
         "filmTitle": {
           "type": "string"
         },
-        "filmPoster": {
+        "posterPath": {
+          "type": "string"
+        },
+        "movieId": {
           "type": "string"
         }
       }

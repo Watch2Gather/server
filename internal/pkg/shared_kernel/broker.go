@@ -37,7 +37,6 @@ func (b *Broker[T]) Start() {
 				}
 			}
 		}
-		slog.Debug("broker", "subs", subs)
 	}
 }
 

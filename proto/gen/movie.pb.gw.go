@@ -105,8 +105,21 @@ func request_MovieService_GetMoviePoster_0(ctx context.Context, marshaler runtim
 	var protoReq GetMoviePosterRequest
 	var metadata runtime.ServerMetadata
 
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["filePath"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "filePath")
+	}
+
+	protoReq.FilePath, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "filePath", err)
 	}
 
 	msg, err := client.GetMoviePoster(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -118,8 +131,21 @@ func local_request_MovieService_GetMoviePoster_0(ctx context.Context, marshaler 
 	var protoReq GetMoviePosterRequest
 	var metadata runtime.ServerMetadata
 
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["filePath"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "filePath")
+	}
+
+	protoReq.FilePath, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "filePath", err)
 	}
 
 	msg, err := server.GetMoviePoster(ctx, &protoReq)
@@ -183,7 +209,7 @@ func RegisterMovieServiceHandlerServer(ctx context.Context, mux *runtime.ServeMu
 
 	})
 
-	mux.Handle("POST", pattern_MovieService_GetMoviePoster_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_MovieService_GetMoviePoster_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -191,7 +217,7 @@ func RegisterMovieServiceHandlerServer(ctx context.Context, mux *runtime.ServeMu
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/watch2gather.proto.movieapi.MovieService/GetMoviePoster", runtime.WithHTTPPathPattern("/api/v1/movies"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/watch2gather.proto.movieapi.MovieService/GetMoviePoster", runtime.WithHTTPPathPattern("/api/v1/movies/poster/{filePath}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -293,13 +319,13 @@ func RegisterMovieServiceHandlerClient(ctx context.Context, mux *runtime.ServeMu
 
 	})
 
-	mux.Handle("POST", pattern_MovieService_GetMoviePoster_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_MovieService_GetMoviePoster_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/watch2gather.proto.movieapi.MovieService/GetMoviePoster", runtime.WithHTTPPathPattern("/api/v1/movies"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/watch2gather.proto.movieapi.MovieService/GetMoviePoster", runtime.WithHTTPPathPattern("/api/v1/movies/poster/{filePath}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -323,7 +349,7 @@ var (
 
 	pattern_MovieService_GetMovie_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"api", "v1", "movies", "id"}, ""))
 
-	pattern_MovieService_GetMoviePoster_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "movies"}, ""))
+	pattern_MovieService_GetMoviePoster_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"api", "v1", "movies", "poster", "filePath"}, ""))
 )
 
 var (

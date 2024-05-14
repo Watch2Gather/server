@@ -42,6 +42,7 @@ func CreateAccessToken(ctx context.Context, data UserData) (string, error) {
 		Username: data.Username,
 		Email:    data.Email,
 		StandardClaims: jwt.StandardClaims{
+			// ExpiresAt: time.Now().Add(time.Hour).Unix(),
 			ExpiresAt: time.Now().Add(time.Hour).Unix(),
 			IssuedAt:  time.Now().Unix(),
 			NotBefore: time.Now().Add(time.Minute * -5).Unix(),
@@ -126,17 +127,28 @@ func GetUserIDFromContext(ctx context.Context) (uuid.UUID, error) {
 
 func TokenInterceptor(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
 	slog.Debug(fmt.Sprint("Method name: ", info.FullMethod))
+	if info.FullMethod == gen.MovieService_GetMoviePoster_FullMethodName {
+		return handler(ctx, req)
+	}
+	if info.FullMethod == gen.MovieService_GetMovie_FullMethodName {
+		return handler(ctx, req)
+	}
 	if info.FullMethod == gen.UserService_LoginUser_FullMethodName {
 		return handler(ctx, req)
 	}
 	if info.FullMethod == gen.UserInfoService_GetUserInfo_FullMethodName {
 		return handler(ctx, req)
 	}
-
 	if info.FullMethod == gen.MovieService_GetAllMovies_FullMethodName {
 		return handler(ctx, req)
 	}
 	if info.FullMethod == gen.UserService_RegisterUser_FullMethodName {
+		return handler(ctx, req)
+	}
+	if info.FullMethod == gen.UserService_RefreshToken_FullMethodName {
+		return handler(ctx, req)
+	}
+	if info.FullMethod == gen.UserService_GetAvatar_FullMethodName {
 		return handler(ctx, req)
 	}
 

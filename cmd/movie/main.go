@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -13,6 +14,7 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/Watch2Gather/server/cmd/movie/config"
+	"github.com/Watch2Gather/server/cmd/movie/socket"
 	"github.com/Watch2Gather/server/internal/movie/app"
 	sharedkernel "github.com/Watch2Gather/server/internal/pkg/shared_kernel"
 	"github.com/Watch2Gather/server/pkg/logger"
@@ -40,22 +42,42 @@ func main() {
 			os.Stdout, &slog.HandlerOptions{Level: logger.ConvertLogLevel(cfg.Level)}))
 	slog.SetDefault(log)
 
-	server := grpc.NewServer(
+	grpcServer := grpc.NewServer(
 		grpc.UnaryInterceptor(sharedkernel.TokenInterceptor),
 	)
 
+	httpMux := http.NewServeMux()
+
 	go func() {
-		defer server.GracefulStop()
+		defer grpcServer.GracefulStop()
 		<-ctx.Done()
 	}()
 
-	_, cleanup, err := app.InitApp(cfg, postgres.DBConnString(cfg.DsnURL), server)
+	_, cleanup, err := app.InitApp(cfg, postgres.DBConnString(cfg.DsnURL), grpcServer)
 	if err != nil {
 		slog.Error("failed init app", err)
 		cancel()
 	}
 
-	// gRPC server
+	go _grpc(ctx, cfg, grpcServer, cancel)
+	go _http(ctx, cfg, httpMux, cancel)
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
+
+	select {
+	case v := <-quit:
+		grpcServer.Stop()
+		cleanup()
+		slog.Info("signal.Notify", v)
+	case done := <-ctx.Done():
+		grpcServer.Stop()
+		cleanup()
+		slog.Info("ctx.Done", "app done", done)
+	}
+}
+
+func _grpc(ctx context.Context, cfg *config.Config, server *grpc.Server, cancel func()) {
 	address := fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)
 	network := "tcp"
 
@@ -66,11 +88,11 @@ func main() {
 		<-ctx.Done()
 	}
 
-	slog.Info("Start server...", "address", address)
+	slog.Info("Start grpc server...", "address", address)
 
 	defer func() {
 		if err1 := l.Close(); err != nil {
-			slog.Error("failed to close", err1, "network", network, "address", address)
+			slog.Error("failed to close grpc", err1, "network", network, "address", address)
 			<-ctx.Done()
 		}
 	}()
@@ -81,18 +103,33 @@ func main() {
 		cancel()
 		<-ctx.Done()
 	}
+}
 
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
+func _http(ctx context.Context, cfg *config.Config, mux *http.ServeMux, cancel func()) {
+	go socket.NewWsHandler(mux)
+	address := fmt.Sprintf("%s:%d", cfg.WSHost, cfg.WSPort)
+	network := "tcp"
 
-	select {
-	case v := <-quit:
-		// server.Stop()
-		cleanup()
-		slog.Info("signal.Notify", v)
-	case done := <-ctx.Done():
-		// server.Stop()
-		cleanup()
-		slog.Info("ctx.Done", "app done", done)
+	l, err := net.Listen(network, address)
+	if err != nil {
+		slog.Error("Failed to listen to address", err, "network", network, "address", address)
+		cancel()
+		<-ctx.Done()
+	}
+
+	slog.Info("Start http server...", "address", address)
+
+	defer func() {
+		if err1 := l.Close(); err != nil {
+			slog.Error("failed to close http", err1, "network", network, "address", address)
+			<-ctx.Done()
+		}
+	}()
+
+	err = http.Serve(l, mux)
+	if err != nil {
+		slog.Error("Failed to start http server", err, "network", network, "address", address)
+		cancel()
+		<-ctx.Done()
 	}
 }

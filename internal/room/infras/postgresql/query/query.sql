@@ -7,14 +7,16 @@ INSERT INTO "app".rooms (
 RETURNING *;
 
 -- name: GetRoomsByUserId :many
-SELECT id, name, owner_id, movie_id, timecode, (
+SELECT r.id, r.name, r.owner_id, r.movie_id, m.title, m.poster_path ,r.timecode, (
   SELECT COUNT(*) FROM "app".participants as p
   WHERE p.room_id = r.id
 )
 FROM "app".rooms as r
 INNER JOIN "app".participants AS p
   ON r.id = p.room_id
-  WHERE p.user_id = $1;
+LEFT JOIN "app".movies AS m
+  ON m.id = r.movie_id
+WHERE p.user_id = $1;
 
 -- name: GetParticipantsByRoomId :many
 SELECT username, avatar, id FROM "app".users AS u
@@ -62,3 +64,8 @@ WHERE id=$1;
 -- name: RemoveParticipant :exec
 DELETE FROM "app".participants
   WHERE room_id=$1 and user_id=$2;
+
+-- name: AddMovieToRoom :exec
+UPDATE "app".rooms
+  SET movie_id=$2
+  WHERE id=$1;

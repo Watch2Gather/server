@@ -33,7 +33,6 @@ type UserInfo struct {
 	ID       uuid.UUID
 }
 
-
 type UpdateTokenModel struct {
 	RefreshToken string
 	ID           uuid.UUID
@@ -42,4 +41,10 @@ type UpdateTokenModel struct {
 type Token struct {
 	AccessToken  string
 	RefreshToken string
+}
+
+type AddFriendModel struct {
+	FriendID   uuid.UUID
+	FriendName string
+	UserID     uuid.UUID
 }

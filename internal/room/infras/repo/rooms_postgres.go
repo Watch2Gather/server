@@ -2,6 +2,7 @@ package repo
 
 import (
 	"context"
+	"database/sql"
 	"log/slog"
 
 	"github.com/google/wire"
@@ -113,7 +114,7 @@ func (r *roomRepo) CreateMessage(ctx context.Context, model *domain.CreateMessag
 	}, nil
 }
 
-func (r *roomRepo) GetRoomsByUserID(ctx context.Context, id uuid.UUID) (_ []*domain.RoomModel, _ error) {
+func (r *roomRepo) GetRoomsByUserID(ctx context.Context, id uuid.UUID) ([]*domain.GetRoomsModel, error) {
 	querier := postgresql.New(r.pg.GetDB())
 
 	rooms, err := querier.GetRoomsByUserId(ctx, id)
@@ -121,16 +122,25 @@ func (r *roomRepo) GetRoomsByUserID(ctx context.Context, id uuid.UUID) (_ []*dom
 		return nil, errors.Wrap(err, "querier.GetRoomsByUserID")
 	}
 
-	var roomsModel []*domain.RoomModel
+	var roomsModel []*domain.GetRoomsModel
 
 	for _, room := range rooms {
-		roomsModel = append(roomsModel, &domain.RoomModel{
+		var mID, poster string
+		if room.PosterPath.Valid {
+			poster = room.PosterPath.String
+		}
+		if room.MovieID.Valid {
+			mID = room.MovieID.UUID.String()
+		}
+		roomsModel = append(roomsModel, &domain.GetRoomsModel{
 			Name:              room.Name,
-			OwnerID:           room.OwnerID,
-			MovieID:           room.MovieID.UUID,
-			Timecode:          0,
-			ID:                room.ID,
+			FilmTitle:         room.Title.String,
+			PosterPath:        poster,
 			ParticipantsCount: int(room.Count),
+			Timecode:          room.Timecode.Time.Second(),
+			OwnerID:           room.OwnerID,
+			ID:                room.ID,
+			MovieID:           mID,
 		})
 	}
 
@@ -227,8 +237,30 @@ func (roomRepo) RemoveParticipant(_ context.Context, _ *domain.RemoveParticipant
 	panic("not implemented") // TODO: Implement
 }
 
-func (roomRepo) UpdateRoom(_ context.Context, _ *domain.UpdateRoomModel) (_ *domain.RoomModel, _ error) {
-	panic("not implemented") // TODO: Implement
+func (r *roomRepo) UpdateRoom(ctx context.Context, model *domain.UpdateRoomModel) error {
+	querier := postgresql.New(r.pg.GetDB())
+
+	var mID uuid.NullUUID
+	if model.MovieID != uuid.Nil {
+		mID.UUID = model.MovieID
+		mID.Valid = true
+	}
+	err := querier.UpdateRoom(ctx, postgresql.UpdateRoomParams{
+		Name: sql.NullString{
+			String: model.Name,
+			Valid:  true,
+		},
+		MovieID: mID,
+		ID: uuid.NullUUID{
+			UUID:  model.RoomID,
+			Valid: true,
+		},
+	})
+	if err != nil {
+		return errors.Wrap(err, "querier.GetRoomOwner")
+	}
+
+	return nil
 }
 
 func (r *roomRepo) GetRoomOwner(ctx context.Context, id uuid.UUID) (uuid.UUID, error) {
@@ -240,4 +272,21 @@ func (r *roomRepo) GetRoomOwner(ctx context.Context, id uuid.UUID) (uuid.UUID, e
 	}
 
 	return ownerID, nil
+}
+
+func (r *roomRepo) AddMovieToRoom(ctx context.Context, model *domain.AddMovieModel) error {
+	querier := postgresql.New(r.pg.GetDB())
+
+	err := querier.AddMovieToRoom(ctx, postgresql.AddMovieToRoomParams{
+		ID: model.RoomID,
+		MovieID: uuid.NullUUID{
+			UUID:  model.MovieID,
+			Valid: true,
+		},
+	})
+	if err != nil {
+		return errors.Wrap(err, "querier.AddMovieToRoom")
+	}
+
+	return nil
 }

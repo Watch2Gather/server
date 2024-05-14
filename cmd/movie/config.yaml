@@ -6,6 +6,10 @@ http:
   host: "0.0.0.0"
   port: 5004
 
+ws:
+  ws_host: "192.168.1.66"
+  ws_port: 8081
+
 postgres:
   pool_max: 2
   dsn_url: host=127.0.0.1 user=postgres password=password dbname=watch2gather sslmode=disable

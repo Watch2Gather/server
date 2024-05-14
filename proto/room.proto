@@ -186,7 +186,8 @@ message Room {
   string id = 3;
   int32  participantsCount = 4;
   string filmTitle = 5;
-  string filmPoster = 6;
+  string posterPath = 6;
+  string movieId = 7;
 }
 
 message Sender {

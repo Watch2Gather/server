@@ -40,3 +40,13 @@ UPDATE "app".users
 -- name: GetUserTokenById :one
 SELECT token FROM "app".users
   WHERE id = $1;
+
+-- name: GetFriendList :many
+SELECT user_id_2 as id, u.username, u.avatar FROM "app".friends as f
+  join "app".users as u on f.user_id_2 = u.id
+  WHERE f.user_id_1 = $1;
+
+-- name: AddFriendById :exec
+INSERT INTO "app".friends (
+  user_id_1, user_id_2
+) VALUES ( $1, $2 );

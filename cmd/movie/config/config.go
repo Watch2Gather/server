@@ -16,6 +16,7 @@ type (
 		PG           `yaml:"postgres"`
 		configs.Log  `yaml:"logger"`
 		configs.HTTP `yaml:"http"`
+		configs.WS   `yaml:"ws"`
 	}
 	PG struct {
 		DsnURL  string `env-required:"true" yaml:"dsn_url" env:"PG_DSN_URL"`
