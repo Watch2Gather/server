@@ -120,7 +120,7 @@ func (g *roomGRPCServer) GetRoomsByUser(ctx context.Context, req *gen.GetRoomsBy
 	return res, nil
 }
 
-func (g *roomGRPCServer) GetUserIDsByRoom(ctx context.Context, req *gen.GetUserIDsByRoomRequest) (*gen.GetUserIDsByRoomResponse, error) {
+func (g *roomGRPCServer) GetUsersByRoom(ctx context.Context, req *gen.GetUsersByRoomRequest) (*gen.GetUsersByRoomResponse, error) {
 	slog.Info("GET: GetRoomsByUser")
 
 	id, err := uuid.Parse(req.GetRoomId())
@@ -135,9 +135,15 @@ func (g *roomGRPCServer) GetUserIDsByRoom(ctx context.Context, req *gen.GetUserI
 		return nil, sharedkernel.ErrServer
 	}
 
-	res := &gen.GetUserIDsByRoomResponse{
-		ParticipantIds: participants.Strings(),
-	}
+	res := &gen.GetUsersByRoomResponse{}
+
+	for _, participant := range participants {
+    res.Participants = append(res.Participants, &gen.Participant{
+    	Id:     participant.UserID.String(),
+    	Name:   participant.Username,
+    	Avatar: participant.Avatar,
+    })
+  }
 
 	return res, nil
 }

@@ -96,7 +96,7 @@ func (u *usecase) GetRoomsByUser(ctx context.Context) ([]*domain.GetRoomsModel, 
 	return rooms, nil
 }
 
-func (u *usecase) GetParticipantsByRoomID(ctx context.Context, id uuid.UUID) (uuid.UUIDs, error) {
+func (u *usecase) GetParticipantsByRoomID(ctx context.Context, id uuid.UUID) ([]*domain.ParticipantModel, error) {
 	participants, err := u.roomRepo.GetParticipantsByRoomID(ctx, id)
 	if err != nil {
 		return nil, errors.Wrap(err, "roomRepo.GetRoomsByUserID")

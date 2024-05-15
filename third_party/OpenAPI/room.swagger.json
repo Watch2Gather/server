@@ -297,12 +297,12 @@
       "get": {
         "summary": "Get users by room id",
         "description": "Get all user ids in a room",
-        "operationId": "RoomService_GetUserIDsByRoom",
+        "operationId": "RoomService_GetUsersByRoom",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/roomapiGetUserIDsByRoomResponse"
+              "$ref": "#/definitions/roomapiGetUsersByRoomResponse"
             }
           },
           "default": {
@@ -418,13 +418,14 @@
         }
       }
     },
-    "roomapiGetUserIDsByRoomResponse": {
+    "roomapiGetUsersByRoomResponse": {
       "type": "object",
       "properties": {
-        "participantIds": {
+        "participants": {
           "type": "array",
           "items": {
-            "type": "string"
+            "type": "object",
+            "$ref": "#/definitions/roomapiParticipant"
           }
         }
       }
@@ -447,6 +448,20 @@
         },
         "user": {
           "$ref": "#/definitions/roomapiSender"
+        }
+      }
+    },
+    "roomapiParticipant": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "avatar": {
+          "type": "string"
         }
       }
     },

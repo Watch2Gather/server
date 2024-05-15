@@ -21,7 +21,7 @@ const _ = grpc.SupportPackageIsVersion7
 const (
 	RoomService_CreateRoom_FullMethodName        = "/watch2gather.proto.roomapi.RoomService/CreateRoom"
 	RoomService_GetRoomsByUser_FullMethodName    = "/watch2gather.proto.roomapi.RoomService/GetRoomsByUser"
-	RoomService_GetUserIDsByRoom_FullMethodName  = "/watch2gather.proto.roomapi.RoomService/GetUserIDsByRoom"
+	RoomService_GetUsersByRoom_FullMethodName    = "/watch2gather.proto.roomapi.RoomService/GetUsersByRoom"
 	RoomService_InviteToRoom_FullMethodName      = "/watch2gather.proto.roomapi.RoomService/InviteToRoom"
 	RoomService_GetMessagesByRoom_FullMethodName = "/watch2gather.proto.roomapi.RoomService/GetMessagesByRoom"
 	RoomService_EnterRoom_FullMethodName         = "/watch2gather.proto.roomapi.RoomService/EnterRoom"
@@ -36,7 +36,7 @@ const (
 type RoomServiceClient interface {
 	CreateRoom(ctx context.Context, in *CreateRoomRequest, opts ...grpc.CallOption) (*CreateRoomResponse, error)
 	GetRoomsByUser(ctx context.Context, in *GetRoomsByUserRequest, opts ...grpc.CallOption) (*GetRoomsByUserResponse, error)
-	GetUserIDsByRoom(ctx context.Context, in *GetUserIDsByRoomRequest, opts ...grpc.CallOption) (*GetUserIDsByRoomResponse, error)
+	GetUsersByRoom(ctx context.Context, in *GetUsersByRoomRequest, opts ...grpc.CallOption) (*GetUsersByRoomResponse, error)
 	InviteToRoom(ctx context.Context, in *InviteToRoomRequest, opts ...grpc.CallOption) (*InviteToRoomResponse, error)
 	GetMessagesByRoom(ctx context.Context, in *GetMessagesByRoomRequest, opts ...grpc.CallOption) (*GetMessagesByRoomResponse, error)
 	EnterRoom(ctx context.Context, in *EnterRoomRequest, opts ...grpc.CallOption) (RoomService_EnterRoomClient, error)
@@ -71,9 +71,9 @@ func (c *roomServiceClient) GetRoomsByUser(ctx context.Context, in *GetRoomsByUs
 	return out, nil
 }
 
-func (c *roomServiceClient) GetUserIDsByRoom(ctx context.Context, in *GetUserIDsByRoomRequest, opts ...grpc.CallOption) (*GetUserIDsByRoomResponse, error) {
-	out := new(GetUserIDsByRoomResponse)
-	err := c.cc.Invoke(ctx, RoomService_GetUserIDsByRoom_FullMethodName, in, out, opts...)
+func (c *roomServiceClient) GetUsersByRoom(ctx context.Context, in *GetUsersByRoomRequest, opts ...grpc.CallOption) (*GetUsersByRoomResponse, error) {
+	out := new(GetUsersByRoomResponse)
+	err := c.cc.Invoke(ctx, RoomService_GetUsersByRoom_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -163,7 +163,7 @@ func (c *roomServiceClient) DeleteRoom(ctx context.Context, in *DeleteRoomReques
 type RoomServiceServer interface {
 	CreateRoom(context.Context, *CreateRoomRequest) (*CreateRoomResponse, error)
 	GetRoomsByUser(context.Context, *GetRoomsByUserRequest) (*GetRoomsByUserResponse, error)
-	GetUserIDsByRoom(context.Context, *GetUserIDsByRoomRequest) (*GetUserIDsByRoomResponse, error)
+	GetUsersByRoom(context.Context, *GetUsersByRoomRequest) (*GetUsersByRoomResponse, error)
 	InviteToRoom(context.Context, *InviteToRoomRequest) (*InviteToRoomResponse, error)
 	GetMessagesByRoom(context.Context, *GetMessagesByRoomRequest) (*GetMessagesByRoomResponse, error)
 	EnterRoom(*EnterRoomRequest, RoomService_EnterRoomServer) error
@@ -182,8 +182,8 @@ func (UnimplementedRoomServiceServer) CreateRoom(context.Context, *CreateRoomReq
 func (UnimplementedRoomServiceServer) GetRoomsByUser(context.Context, *GetRoomsByUserRequest) (*GetRoomsByUserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetRoomsByUser not implemented")
 }
-func (UnimplementedRoomServiceServer) GetUserIDsByRoom(context.Context, *GetUserIDsByRoomRequest) (*GetUserIDsByRoomResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetUserIDsByRoom not implemented")
+func (UnimplementedRoomServiceServer) GetUsersByRoom(context.Context, *GetUsersByRoomRequest) (*GetUsersByRoomResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUsersByRoom not implemented")
 }
 func (UnimplementedRoomServiceServer) InviteToRoom(context.Context, *InviteToRoomRequest) (*InviteToRoomResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method InviteToRoom not implemented")
@@ -251,20 +251,20 @@ func _RoomService_GetRoomsByUser_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
-func _RoomService_GetUserIDsByRoom_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetUserIDsByRoomRequest)
+func _RoomService_GetUsersByRoom_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUsersByRoomRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(RoomServiceServer).GetUserIDsByRoom(ctx, in)
+		return srv.(RoomServiceServer).GetUsersByRoom(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: RoomService_GetUserIDsByRoom_FullMethodName,
+		FullMethod: RoomService_GetUsersByRoom_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RoomServiceServer).GetUserIDsByRoom(ctx, req.(*GetUserIDsByRoomRequest))
+		return srv.(RoomServiceServer).GetUsersByRoom(ctx, req.(*GetUsersByRoomRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -396,8 +396,8 @@ var RoomService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _RoomService_GetRoomsByUser_Handler,
 		},
 		{
-			MethodName: "GetUserIDsByRoom",
-			Handler:    _RoomService_GetUserIDsByRoom_Handler,
+			MethodName: "GetUsersByRoom",
+			Handler:    _RoomService_GetUsersByRoom_Handler,
 		},
 		{
 			MethodName: "InviteToRoom",

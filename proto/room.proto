@@ -29,7 +29,7 @@ service RoomService {
       tags: "Room"
     };
   }
-  rpc GetUserIDsByRoom (GetUserIDsByRoomRequest) returns (GetUserIDsByRoomResponse){
+  rpc GetUsersByRoom (GetUsersByRoomRequest) returns (GetUsersByRoomResponse){
     option (google.api.http) = {
       get: "/api/v1/rooms/{roomId}/users"
     };
@@ -121,12 +121,18 @@ message GetRoomsByUserResponse {
   repeated Room rooms = 1;
 }
 
-message GetUserIDsByRoomRequest {
+message GetUsersByRoomRequest {
   string roomId = 1;
 }
 
-message GetUserIDsByRoomResponse {
-  repeated string participantIds = 1;
+message GetUsersByRoomResponse {
+  repeated Participant participants = 1;
+}
+
+message Participant {
+  string id = 1;
+  string name = 2;
+  string avatar = 3;
 }
 
 message InviteToRoomRequest {

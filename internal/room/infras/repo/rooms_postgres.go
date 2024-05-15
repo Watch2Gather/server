@@ -147,7 +147,7 @@ func (r *roomRepo) GetRoomsByUserID(ctx context.Context, id uuid.UUID) ([]*domai
 	return roomsModel, nil
 }
 
-func (r *roomRepo) GetParticipantsByRoomID(ctx context.Context, id uuid.UUID) (uuid.UUIDs, error) {
+func (r *roomRepo) GetParticipantsByRoomID(ctx context.Context, id uuid.UUID) ([]*domain.ParticipantModel, error) {
 	querier := postgresql.New(r.pg.GetDB())
 
 	participants, err := querier.GetParticipantsByRoomId(ctx, id)
@@ -155,12 +155,16 @@ func (r *roomRepo) GetParticipantsByRoomID(ctx context.Context, id uuid.UUID) (u
 		return nil, errors.Wrap(err, "querier.GetParticipantsByRoomID")
 	}
 
-	ids := make(uuid.UUIDs, 0)
+	res := []*domain.ParticipantModel{}
 	for _, parparticipant := range participants {
-		ids = append(ids, parparticipant.ID)
+		res = append(res, &domain.ParticipantModel{
+			Username: parparticipant.Username,
+			Avatar:   parparticipant.Avatar.String,
+			UserID:   parparticipant.ID,
+		})
 	}
 
-	return ids, nil
+	return res, nil
 }
 
 func (r *roomRepo) GetMessagesByRoomID(ctx context.Context, id uuid.UUID) ([]*domain.MessageModel, error) {

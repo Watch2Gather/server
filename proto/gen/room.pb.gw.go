@@ -75,8 +75,8 @@ func local_request_RoomService_GetRoomsByUser_0(ctx context.Context, marshaler r
 
 }
 
-func request_RoomService_GetUserIDsByRoom_0(ctx context.Context, marshaler runtime.Marshaler, client RoomServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq GetUserIDsByRoomRequest
+func request_RoomService_GetUsersByRoom_0(ctx context.Context, marshaler runtime.Marshaler, client RoomServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq GetUsersByRoomRequest
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -96,13 +96,13 @@ func request_RoomService_GetUserIDsByRoom_0(ctx context.Context, marshaler runti
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "roomId", err)
 	}
 
-	msg, err := client.GetUserIDsByRoom(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.GetUsersByRoom(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_RoomService_GetUserIDsByRoom_0(ctx context.Context, marshaler runtime.Marshaler, server RoomServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq GetUserIDsByRoomRequest
+func local_request_RoomService_GetUsersByRoom_0(ctx context.Context, marshaler runtime.Marshaler, server RoomServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq GetUsersByRoomRequest
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -122,7 +122,7 @@ func local_request_RoomService_GetUserIDsByRoom_0(ctx context.Context, marshaler
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "roomId", err)
 	}
 
-	msg, err := server.GetUserIDsByRoom(ctx, &protoReq)
+	msg, err := server.GetUsersByRoom(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -501,7 +501,7 @@ func RegisterRoomServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux
 
 	})
 
-	mux.Handle("GET", pattern_RoomService_GetUserIDsByRoom_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_RoomService_GetUsersByRoom_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -509,12 +509,12 @@ func RegisterRoomServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/watch2gather.proto.roomapi.RoomService/GetUserIDsByRoom", runtime.WithHTTPPathPattern("/api/v1/rooms/{roomId}/users"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/watch2gather.proto.roomapi.RoomService/GetUsersByRoom", runtime.WithHTTPPathPattern("/api/v1/rooms/{roomId}/users"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_RoomService_GetUserIDsByRoom_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_RoomService_GetUsersByRoom_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
@@ -522,7 +522,7 @@ func RegisterRoomServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux
 			return
 		}
 
-		forward_RoomService_GetUserIDsByRoom_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_RoomService_GetUsersByRoom_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -743,25 +743,25 @@ func RegisterRoomServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux
 
 	})
 
-	mux.Handle("GET", pattern_RoomService_GetUserIDsByRoom_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_RoomService_GetUsersByRoom_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/watch2gather.proto.roomapi.RoomService/GetUserIDsByRoom", runtime.WithHTTPPathPattern("/api/v1/rooms/{roomId}/users"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/watch2gather.proto.roomapi.RoomService/GetUsersByRoom", runtime.WithHTTPPathPattern("/api/v1/rooms/{roomId}/users"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_RoomService_GetUserIDsByRoom_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_RoomService_GetUsersByRoom_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_RoomService_GetUserIDsByRoom_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_RoomService_GetUsersByRoom_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -905,7 +905,7 @@ var (
 
 	pattern_RoomService_GetRoomsByUser_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "rooms"}, ""))
 
-	pattern_RoomService_GetUserIDsByRoom_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "rooms", "roomId", "users"}, ""))
+	pattern_RoomService_GetUsersByRoom_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "rooms", "roomId", "users"}, ""))
 
 	pattern_RoomService_InviteToRoom_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "rooms", "roomId", "invite"}, ""))
 
@@ -925,7 +925,7 @@ var (
 
 	forward_RoomService_GetRoomsByUser_0 = runtime.ForwardResponseMessage
 
-	forward_RoomService_GetUserIDsByRoom_0 = runtime.ForwardResponseMessage
+	forward_RoomService_GetUsersByRoom_0 = runtime.ForwardResponseMessage
 
 	forward_RoomService_InviteToRoom_0 = runtime.ForwardResponseMessage
 
